@@ -1,13 +1,17 @@
 import { Router, Route } from 'electron-router-dom'
 
-import { MainScreen, AboutScreen, AnotherScreen } from 'renderer/screens'
+import { AuthScreen, AboutScreen, AnotherScreen, Dashboard, ClassSelectionView} from 'renderer/screens'
+
 
 export function AppRoutes() {
   return (
     <Router
       main={
         <>
-          <Route path="/" element={<MainScreen />} />
+          <Route path="/" element={<AuthScreen />} />
+          <Route path="/select-class" element={<ClassSelectionView />} />
+          <Route path="/home" element={<Dashboard />} />
+          <Route path="/home/:class_id" element={<Dashboard />} />
           <Route path="/anotherScreen" element={<AnotherScreen />} />
         </>
       }

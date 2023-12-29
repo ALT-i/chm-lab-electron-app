@@ -9,8 +9,8 @@ export async function MainWindow() {
   const window = createWindow({
     id: 'main',
     title: displayName,
-    width: 700,
-    height: 473,
+    width: 1200,
+    height: 700,
     show: false,
     center: true,
     movable: true,
@@ -24,9 +24,9 @@ export async function MainWindow() {
   })
 
   window.webContents.on('did-finish-load', () => {
-    if (ENVIRONMENT.IS_DEV) {
-      window.webContents.openDevTools({ mode: 'detach' })
-    }
+    // if (ENVIRONMENT.IS_DEV) {
+    window.webContents.openDevTools({ mode: 'detach' })
+    // }
 
     window.show()
   })

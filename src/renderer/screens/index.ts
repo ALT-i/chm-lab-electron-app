@@ -1,3 +1,5 @@
 export * from './Another'
 export * from './About'
 export * from './Main'
+export * from './Dashboard'
+export * from './ClassSelectionView'

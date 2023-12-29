@@ -3,11 +3,13 @@ import { useEffect } from 'react'
 
 import { Container, Heading, Button } from 'renderer/components'
 import { useWindowStore } from 'renderer/store'
+import IndexHeader from 'renderer/components/IndexHeader'
+import Authentication from 'renderer/components/Authentication'
 
 // The "App" comes from the context bridge in preload/index.ts
 const { App } = window
 
-export function MainScreen() {
+export function AuthScreen() {
   const navigate = useNavigate()
   const store = useWindowStore().about
 
@@ -28,9 +30,15 @@ export function MainScreen() {
 
   return (
     <Container>
-      <Heading>Hi, {App.username || 'there'}! 👋</Heading>
 
-      <h2>It's time to build something awesome! ✨</h2>
+      <div className="auth-component">
+        <IndexHeader></IndexHeader>
+        <Authentication></Authentication>
+      </div>
+
+      {/* <Heading>Hi, {App.username || 'there'}! 👋</Heading>
+
+      <h2>It's time to build something! ✨</h2>
 
       <nav>
         <Button
@@ -43,7 +51,7 @@ export function MainScreen() {
         <Button onClick={() => navigate('anotherScreen')}>
           Go to Another screen
         </Button>
-      </nav>
+      </nav> */}
     </Container>
   )
 }

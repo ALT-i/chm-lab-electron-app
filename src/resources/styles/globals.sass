@@ -1,3 +1,4 @@
+@use 'material-symbols' as *
 @use 'animations' as *
 @use 'resets' as *
 
@@ -6,8 +7,8 @@ body, html, app
   flex-direction: column
   width: 100vw
   height: 100vh
-  color: #965fa3
-  background-image: url('/illustration.svg')
+  // color: #965fa3
+  // background-image: url('/illustration.svg')
   background-repeat: no-repeat
   background-size: cover
   background-position: 160px 125px
@@ -21,3 +22,1158 @@ body, html, app
 .disabled
   filter: grayscale(40%)
   pointer-events: none
+
+
+
+  html
+    body
+      background-image: linear-gradient(to bottom, #f9f9f9 2%, #f9f9f9 20%, #f9f9f9 80%)
+      background-repeat: no-repeat
+      background-size: cover
+      margin: 0
+      padding: 0
+      height: 100vh
+      width: 100%
+      overflow: hidden
+html
+  body
+    header
+      .header-section
+        background: #ececec
+        height: 28px
+        display: flex
+        flex-direction: row
+        align-items: center
+        overflow: hidden
+        -webkit-user-select: none
+        .topbar-logo
+          flex: 85%
+          margin-left: 10px
+          align-self: center
+          justify-self: center
+          -webkit-app-region: drag
+          .logo-compartment
+            display: flex
+            flex-direction: row
+            align-items: center
+            justify-content: flex-start
+            .logo
+              width: 10px
+              height: 9px
+              background: #02380a
+              margin-right: 5px
+              border-radius: 50%
+            .logo-caption
+              font-size: 13px
+              font-weight: 200
+        .topbar-icons
+          flex: 15%
+          align-self: center
+          .icon-flex
+            display: flex
+            flex-direction: row
+            justify-content: flex-end
+            align-content: center
+            .icon-flex-minimize
+              z-index: 99
+              &:hover
+                background: rgba(201, 201, 201, 0.3921568627)
+              span
+                display: flex
+                flex-direction: row
+                justify-content: center
+                align-content: center
+                height: 100%
+                padding: 3px 14px
+                margin: auto
+                font-size: 20px
+                font-weight: 300
+                transition: 0.3s ease-in-out
+            .icon-flex-resize
+              span
+                display: flex
+                flex-direction: row
+                justify-content: center
+                align-content: center
+                height: 100%
+                padding: 5px 14px
+                font-size: 15px
+                font-weight: 300
+                margin: auto
+                transition: 0.3s ease-in-out
+              &:hover
+                background: rgba(201, 201, 201, 0.3921568627)
+            .icon-flex-close
+              span
+                display: flex
+                flex-direction: row
+                justify-content: center
+                align-content: center
+                padding: 2px 14px
+                font-size: 20px
+                font-weight: 300
+              &:hover
+                background: #bb0202
+                span
+                  color: #ededed
+.components
+  width: 100%
+  height: 100%
+  overflow: hidden
+  -webkit-box-sizing: border-box
+.main-header
+  text-align: center
+  padding-bottom: 3rem
+  h1
+    font-size: 2.7em
+    font-weight: 900
+    font-family: "Roboto", sans-serif
+    margin: 0
+    a
+      color: rgba(121, 120, 120, 0.864)
+      cursor: pointer
+      text-decoration: none
+.main-hero
+  .difficulty-selection
+    ul
+      display: flex
+      flex-direction: row
+      align-items: center
+      align-content: space-around
+      justify-content: center
+      padding: 0
+      li
+        list-style: none
+        text-decoration: none
+        color: rgba(193, 199, 152, 0.859)
+        padding: 0.25em 1.5em
+        margin: 0 1.3em
+        border: 3px solid rgba(193, 199, 152, 0.859)
+        border-radius: 2em
+        font-size: 1.2em
+        font-weight: 700
+        transition: 0.3s ease-in-out
+        cursor: pointer
+        &:hover
+          background: rgba(193, 199, 152, 0.859)
+          color: #222222
+        &:active
+          transform: translateY(2px)
+        a
+          text-decoration: none
+          color: inherit
+      .active
+        background: rgba(193, 199, 152, 0.859)
+        color: #222222
+  .hero-section
+    height: 5.6em
+    background: rgba(193, 199, 152, 0.859)
+    border: 3px solid rgba(221, 192, 209, 0.7450980392)
+    border-radius: 1em
+    margin: 0 2px 10px 2px
+    .intro-paragraph
+      display: flex
+      justify-content: center
+      align-items: flex-start
+      text-align: center
+      p
+        padding: 0.4em
+        font-size: 1.1em
+        font-weight: 700
+        color: #373232
+        a
+          text-decoration: underline
+          color: #373232
+          &:hover
+            color: rgba(82, 10, 148, 0.788)
+.display-panel
+  margin-left: 14em
+  margin-bottom: 3em
+  overflow: auto
+  background: rgba(193, 199, 152, 0.859)
+  box-shadow: 1px 2px 28px rgba(113, 116, 97, 0.8588235294) inset
+  border-radius: 1em
+  border: 3px solid rgba(221, 192, 209, 0.7450980392)
+  .question-view
+    .panel-title
+      text-align: center
+      h3
+        font-size: 1.2em
+        font-weight: bolder
+        padding: 0.1em 1em 0.5em 1em
+    ul
+      margin: 0
+      padding: 0 0.5em
+      li
+        list-style: none
+        .question-group
+          border-top: 1px dotted #000000
+          border-bottom: 1px dotted #000000
+          width: 100%
+          p
+            &.question
+              background: #bebaba
+              border: 2px solid rgba(221, 192, 209, 0.7450980392)
+              border-radius: 2em
+              font-size: 1em
+              font-weight: 700
+              text-align: left
+              padding: 1.3em
+            &.answer
+              text-align: right
+              padding-right: 0.5em
+              font-size: 0.7em
+              font-weight: 600
+              font-style: italic
+.handle
+  float: left
+  width: 0.5em
+  height: calc(100% - 50px)
+  background: #13000b
+  cursor: ew-resize
+.side-panel
+  float: left
+  width: 12em
+  padding: 0.5em
+  background: rgba(193, 199, 152, 0.859)
+  overflow: auto
+  box-shadow: 1px 2px 28px rgba(113, 116, 97, 0.8588235294) inset
+  border-radius: 1em
+  border: 3px solid rgba(221, 192, 209, 0.7450980392)
+  .category-view
+    .panel-title
+      overflow-wrap: break-word
+      h3
+        font-size: 1.4em
+        font-weight: bolder
+        padding: 0.1em 0.2em 0.5em 0.2em
+        text-align: center
+    ul
+      padding: 0.2em 0 2em 0
+      .options
+        display: flex
+        flex-direction: column
+        justify-content: center
+        align-items: center
+        .options-box-header
+          width: 100%
+          display: flex
+          flex-direction: row
+          justify-content: space-between
+          align-items: center
+          li
+            list-style: none
+            padding: 1.2em 0 1.2em 1.2em
+            transition: 0.3s ease-in-out
+            font-size: 1em
+            font-weight: 600
+            cursor: pointer
+          .arrhead
+            transition: 0.3s ease-in-out
+            margin-right: 1em
+            &.active
+              transform: rotate(180deg)
+              .options
+                height: 2em
+        .option-box-compartment
+          display: none
+          flex-direction: row
+          justify-content: space-around
+          align-items: center
+          width: 100%
+          .icons
+            padding: 0 1em
+          &.active
+            display: flex
+            max-height: 6em
+  a
+    display: flex
+    justify-content: center
+    text-decoration: none
+    color: #1e0303
+    transition: 1s ease-in-out
+    &:hover
+      text-decoration: underline
+.left-side-panel
+  height: 100%
+  -webkit-user-select: none
+  .panel
+    float: left
+    width: 15em
+    height: 95vh
+    background: rgba(224, 244, 223, 0.5294117647)
+    .basic-profile
+      display: flex
+      align-items: center
+      justify-content: space-between
+      height: 5em
+      width: 100%
+      background: #013112
+      .user-name
+        p
+          padding: 0 0.7em
+          font-size: 1.3em
+          font-weight: 600
+          color: #eaeaea
+      .user-picture
+        padding: 0 1em
+        margin-right: 2em
+        border: 3px solid rgba(255, 255, 255, 0.27) 70000000
+        border-radius: 50%
+        width: 17px
+        height: 47px
+        i
+          font-size: 3em
+          color: #fff
+    .continue-class
+      display: flex
+      flex-direction: row
+      justify-content: center
+      align-items: center
+      width: 100%
+      height: 70px
+      margin: 1em auto
+      .continue-button
+        height: 35px
+        width: 14em
+        font-size: 14px
+        font-weight: 600
+        letter-spacing: 0.5px
+        border-radius: 5px
+        background: #efefef
+        display: flex
+        flex-direction: row
+        justify-content: space-around
+        align-items: center
+        border: 1px solid #001f00
+        transition: 0.3s ease-in-out
+        cursor: pointer
+        p
+          font-size: 15px
+          font-weight: 600
+          color: #001f00
+        span
+          margin-left: 3px
+          color: #001f00
+          font-size: 23px
+        &:hover
+          background: #fff
+    #element
+      &.work
+        max-height: 86%
+        overflow-y: auto
+        overflow-x: hidden
+        &.more-width
+          max-height: 86%
+          overflow-y: auto
+          overflow-x: hidden
+          &::-webkit-scrollbar-button
+            color: rgba(227, 227, 227, 0.7843137255)
+            background: #001f00
+            height: 0px
+          &::-webkit-scrollbar-thumb
+            border-radius: 15px
+            background: #989898
+            visibility: hidden
+            border: none
+          &::-webkit-scrollbar
+            width: 9px
+            background: transparent
+        &::-webkit-scrollbar-button
+          color: rgba(227, 227, 227, 0.7843137255)
+          background: #001f00
+          height: 0px
+        &::-webkit-scrollbar-thumb
+          border: 3.5px solid #e0f4df
+          border-radius: 15px
+          background: #989898
+          visibility: hidden
+        &::-webkit-scrollbar
+          width: 9px
+          background: transparent
+        .workspace-workbench-compartment
+          .workbench
+            margin: 0.3em auto
+            .instructor
+              overflow-wrap: normal
+              padding: 0 10px
+              p
+                font-size: 15px
+                font-weight: 600
+            .workbench-apparatus
+              margin: 20px 0 0 0
+              .apparatus-section
+                .apparatus-options-header
+                  display: flex
+                  flex-direction: row-reverse
+                  justify-content: flex-end
+                  align-content: center
+                  transition: 0.3s ease-in-out
+                  padding: 5px 10px
+                  p
+                    font-size: 16px
+                    font-weight: 600
+                    margin: 5px 0
+                    padding-left: 10px
+                  i
+                    font-size: 16px
+                    font-weight: 200
+                    margin: auto 0
+                .apparatus-options
+                  ul
+                    &.apparatus-list
+                      margin: 0
+                      padding: 1px 0
+                      display: grid
+                      grid-template-columns: 1fr 1fr
+                      grid-column-gap: auto
+                      grid-row-gap: auto
+                      li
+                        list-style: none
+                        transition: 0.3s ease-in-out
+                        padding: 14px 10px
+                        margin: 0 0.1em
+                        &:hover
+                          background: rgba(17, 84, 37, 0.2588235294)
+            .workbench-substances
+              margin: 20px 0 0 0
+              .substance-section
+                .substance-options-header
+                  display: flex
+                  flex-direction: row-reverse
+                  justify-content: flex-end
+                  align-content: center
+                  transition: 0.3s ease-in-out
+                  padding: 5px 10px
+                  p
+                    font-size: 16px
+                    font-weight: 600
+                    margin: 5px 0
+                    padding-left: 10px
+                  i
+                    font-size: 16px
+                    font-weight: 200
+                    margin: auto 0
+                .substance-options
+                  ul
+                    &.substance-list
+                      margin: 0
+                      padding: 1px 0
+                      display: grid
+                      grid-template-columns: 1fr 1fr
+                      grid-column-gap: auto
+                      grid-row-gap: auto
+                      li
+                        list-style: none
+                        transition: 0.3s ease-in-out
+                        padding: 14px 10px
+                        margin: 0 0.1em
+                        &:hover
+                          background: rgba(17, 84, 37, 0.2588235294)
+    .profile-options
+      margin: 4em auto 0 auto
+      transition: 0.3s ease-in-out
+      .profile-option
+        .option
+          margin: 5px 0
+          padding: 0 10px
+          display: flex
+          flex-direction: row-reverse
+          justify-content: flex-end
+          align-content: center
+          cursor: pointer
+        p
+          color: #001f00
+          font-size: 17px
+          font-weight: 600
+          padding-left: 0.5em
+          padding-top: 1em
+        span
+          &.data_info_alert
+            padding: 15px 10px
+            font-size: 23px
+          &.person
+            padding: 15px 10px
+            font-size: 23px
+          &.settings
+            padding: 15px 10px
+            font-size: 19px
+          &.info
+            padding: 15px 10px
+            font-size: 21px
+          &.logout
+            padding: 16px 10px
+            font-size: 19px
+        &:hover
+          background: rgba(17, 84, 37, 0.2588235294)
+.left-side-panel .panel #element.work.more-width:hover::-webkit-scrollbar-thumb, .left-side-panel .panel #element.work.more-width:focus::-webkit-scrollbar-thumb
+  border: 0
+  visibility: visible
+  -webkit-transition: visibility 0s 0.2s
+  transition: visibility 0s 0.2s
+.left-side-panel .panel #element.work:hover::-webkit-scrollbar-thumb, .left-side-panel .panel #element.work:focus::-webkit-scrollbar-thumb
+  visibility: visible
+  -webkit-transition: visibility 0s 0.2s
+  transition: visibility 0s 0.2s
+.quiz-view
+  height: 4em
+  background: rgba(193, 199, 152, 0.859)
+  border: 3px solid rgba(221, 192, 209, 0.7450980392)
+  border-radius: 1em
+  margin: 0 2px 10px 2px
+  .quiz-hero
+    .title-block
+      h2
+        text-align: center
+        font-size: 1.4em
+        font-weight: bolder
+        padding: 0.1em 1em 0.5em 1em
+  .return-button
+    margin: 1.2em auto
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+    a
+      background: none
+      border-radius: 1.5em
+      border: 3px solid rgba(227, 230, 208, 0.951)
+      font-size: 1.2em
+      font-weight: 600
+      padding: 0.5em
+      text-align: center
+      width: 3.5em
+      transition: 0.3s ease-in-out
+      text-decoration: none
+      color: rgba(193, 199, 152, 0.859)
+      &:hover
+        border: 3px solid rgba(193, 199, 152, 0.859)
+        background: rgba(193, 199, 152, 0.859)
+        color: #240116
+  .game-buttons
+    margin: 1.2em auto
+    display: flex
+    flex-direction: row
+    align-content: space-between
+    justify-content: center
+    button
+      background: none
+      border-radius: 1.5em
+      border: 3px solid rgba(227, 230, 208, 0.951)
+      font-size: 1.2em
+      font-weight: 600
+      margin: 0 1.5em
+      padding: 0.5em 2em
+      text-align: center
+      transition: 0.3s ease-in-out
+      text-decoration: none
+      color: rgba(193, 199, 152, 0.859)
+      &:hover
+        border: 3px solid rgba(193, 199, 152, 0.859)
+        background: rgba(193, 199, 152, 0.859)
+        color: #240116
+    a
+      background: none
+      border-radius: 1.5em
+      border: 3px solid rgba(227, 230, 208, 0.951)
+      font-size: 1.2em
+      font-weight: 600
+      padding: 0.5em
+      text-align: center
+      width: 9.5em
+      transition: 0.3s ease-in-out
+      text-decoration: none
+      color: rgba(193, 199, 152, 0.859)
+      &:hover
+        border: 3px solid rgba(193, 199, 152, 0.859)
+        background: rgba(193, 199, 152, 0.859)
+        color: #240116
+  .quiz-box
+    padding: 1em 0
+    .quiz-area
+      background: rgba(193, 199, 152, 0.859)
+      box-shadow: 1px 2px 28px rgba(113, 116, 97, 0.8588235294) inset
+      border-radius: 1em
+      border: 3px solid rgba(221, 192, 209, 0.7450980392)
+      height: 27em
+      .start-page
+        text-align: center
+        h2
+          padding: 2.2em 2em
+          font-size: 1.2em
+        select
+          margin: 1.2em 2em 6em 2em
+          border-radius: 1em
+          width: 9em
+          height: 2.5em
+          text-align: center
+          transition: 0.3s ease-in-out
+          *
+            background: rgba(193, 199, 152, 0.859)
+            font-size: 1.2em
+            padding: 1em auto
+            text-align: center
+            border-bottom: 3px solid #240116
+        button
+          background: none
+          border-radius: 1.5em
+          border: 3px solid rgba(227, 230, 208, 0.951)
+          font-size: 1.4em
+          font-weight: 500
+          padding: 0.5em
+          text-align: center
+          width: 6.5em
+          transition: 0.3s ease-in-out
+          text-decoration: none
+          color: #000000
+          display: block
+          margin: 2em auto
+          box-shadow: 1px 2px 18px rgba(48, 48, 48, 0.2392156863)
+          &:hover
+            box-shadow: 1px 2px 18px rgba(0, 0, 0, 0.5960784314)
+            transform: translateY(-2px)
+      .question-page
+        padding: 2em
+        .question-area
+          background: #cccbc7
+          color: #373535
+          padding: 1em 2em
+          margin: 1em auto
+          width: 80%
+          border: 1px dotted #181818
+          border-radius: 1em
+          height: 7.7em
+        .answer-area
+          display: grid
+          grid-column-gap: 1em
+          grid-row-gap: 1.6em
+          grid-template-columns: 1fr 1fr
+          grid-template-rows: auto
+          margin-bottom: 2em
+          button
+            background: none
+            padding-top: 1em
+            border-radius: 1.5em
+            border: 3px solid rgba(227, 230, 208, 0.951)
+            font-size: 1em
+            font-weight: 500
+            padding: 0.5em
+            text-align: center
+            height: 3.4em
+            width: 10.5em
+            transition: 0.3s ease-in-out
+            text-decoration: none
+            color: #000000
+            display: block
+            margin: 0.5em auto
+            box-shadow: 1px 2px 18px rgba(48, 48, 48, 0.2392156863)
+            &:hover
+              box-shadow: 1px 2px 18px rgba(0, 0, 0, 0.5960784314)
+              transform: translateY(-2px)
+            &:active
+              transform: translateY(1px)
+          .wrong
+            background: #ed6b6b
+          .correct
+            background: #84ed88
+      .result-page
+        padding: 3em
+        text-align: center
+        width: 80%
+        margin: auto
+        h2
+          margin: 2em 0
+        h3
+          margin: 0.5em 0
+.auth-component
+  overflow: hidden
+  display: flex
+  height: 100vh
+  .auth-section
+    margin: auto
+.authentication
+  display: flex
+  flex-direction: column
+  align-items: center
+  justify-content: center
+  padding: 0.6em 0
+  height: 100%
+  .alert
+    background: rgb(224, 0, 0)
+    color: bisque
+    padding: 0.8em
+    height: 1em
+    width: 17em
+    border-radius: 2em
+    font-size: 1.2em
+    font-weight: 700
+    letter-spacing: 1px
+    margin: 1em auto
+    text-align: center
+  .section-login
+    max-height: 50%
+    form
+      div
+        margin-top: 1.2em
+        label
+          padding: 0.5em 0
+          color: rgba(2, 29, 1, 0.859)
+          font-size: 1em
+          font-weight: 600
+          letter-spacing: 1px
+          text-align: center
+        input
+          width: 15em
+          border-radius: 0.8em
+          border: 2px solid rgba(2, 29, 1, 0.641)
+          background: none
+          padding-top: 1em
+          font-size: 1em
+          font-weight: 700
+          padding: 0.8em
+          height: 1.8em
+          transition: 0.3s ease-in-out
+          text-decoration: none
+          color: rgba(2, 29, 1, 0.859)
+          display: block
+          margin: 0.5em auto
+          box-shadow: 1px 2px 4px rgba(2, 29, 1, 0.213)
+          &:active
+            border: 2px solid rgba(2, 29, 1, 0.641)
+            background: none
+        &.submit
+          padding-top: 3em
+          display: flex
+          flex-direction: column
+          align-items: center
+          justify-content: center
+          button
+            width: 50%
+            border-radius: 2em
+            border: 3px solid rgb(2, 29, 1)
+            padding-top: 1em
+            font-size: 1em
+            font-weight: 700
+            padding: 0.5em
+            text-align: center
+            height: 3.4em
+            width: 8.5em
+            transition: 0.3s ease-in-out
+            text-decoration: none
+            display: block
+            margin: 0.5em auto
+            background: rgb(2, 29, 1)
+            color: #ededed
+            &:hover
+              width: 11em
+              background: rgb(2, 29, 1)
+              color: #ededed
+  .section-sign-up
+    max-height: 50%
+    form
+      div
+        margin-top: 1.2em
+        label
+          display: block
+          padding: 0.5em 0
+          color: rgba(2, 29, 1, 0.859)
+          font-size: 1em
+          font-weight: 600
+          letter-spacing: 1px
+          text-align: center
+        input
+          width: 15em
+          border-radius: 0.8em
+          border: 2px solid rgba(2, 29, 1, 0.641)
+          background: none
+          padding-top: 1em
+          font-size: 1em
+          font-weight: 700
+          padding: 0.8em
+          height: 1.8em
+          transition: 0.3s ease-in-out
+          text-decoration: none
+          color: rgba(2, 29, 1, 0.859)
+          display: block
+          margin: 0.5em auto
+          box-shadow: 1px 2px 4px rgba(2, 29, 1, 0.213)
+          &:active
+            border-color: none
+            border: 3px solid rgba(227, 230, 208, 0.951)
+            background: none
+        &.submit
+          padding-top: 3em
+          display: flex
+          flex-direction: column
+          align-items: center
+          justify-content: center
+          button
+            width: 50%
+            border-radius: 2em
+            border: 3px solid rgb(2, 29, 1)
+            padding-top: 1em
+            font-size: 1em
+            font-weight: 700
+            padding: 0.5em
+            text-align: center
+            height: 3.4em
+            width: 8.5em
+            transition: 0.3s ease-in-out
+            text-decoration: none
+            display: block
+            margin: 0.5em auto
+            background: rgb(2, 29, 1)
+            color: #ededed
+            &:hover
+              width: 11em
+  .foot-note
+    p
+      font-size: 1em
+      font-weight: 600
+      cursor: pointer
+      text-align: center
+      color: rgb(2, 29, 1)
+      letter-spacing: 1px
+      padding: 0.4em
+      text-decoration: none
+      transition: 0.5s ease-in-out
+      &:hover
+        text-decoration: underline
+.display-home-view
+  height: 70%
+  display: flex
+  align-content: center
+  justify-content: center
+  flex-direction: column
+  .landing-page-section
+    margin: auto
+    h1
+      font-size: 3em
+      font-weight: 1000
+      margin: 1em 0
+      text-align: center
+    p
+      color: bisque
+      font-size: 0.8em
+      font-weight: 300
+      margin: 1.8em 0
+.display-difficulty-selector
+  h2
+    text-align: center
+    color: bisque
+    margin: 1em
+    font-size: 1.7em
+    font-weight: 700
+  .difficulty-selector
+    display: flex
+    flex-direction: column
+    align-content: center
+    align-items: center
+    justify-content: center
+    height: 60vh
+    div
+      width: 70%
+      margin: auto
+      ul
+        display: flex
+        flex-direction: column
+        align-content: center
+        align-items: center
+        justify-content: center
+        margin: 0
+        padding: 0
+        li
+          font-size: 1em
+          font-weight: 600
+          margin: 1em 0
+          color: #240116
+          list-style: none
+          width: 5em
+          height: 1em
+          padding: 1.2em
+          text-align: center
+          background-color: bisque
+          border-radius: 2em
+          transition: 0.3s ease-in-out
+          cursor: pointer
+          &:hover
+            width: 6.5em
+.class-selector-component
+  display: flex
+  flex-direction: row
+  justify-content: center
+  .class-selector
+    padding: 1em
+    width: 100%
+    display: flex
+    flex-direction: column
+    align-items: left
+    justify-content: flex-start
+    height: 100vh
+    overflow: scroll
+    .selector-header
+      border-bottom: 1px solid rgba(2, 29, 1, 0.859)
+      h1
+        color: #0c6549
+        font-size: 2.7em
+        font-weight: 600
+    .class-selection-grid
+      margin-bottom: 2em
+      ul
+        display: grid
+        grid-template-columns: 1fr 1fr 1fr
+        padding: 0
+        li
+          list-style: none
+          text-decoration: none
+          color: rgba(2, 29, 1, 0.859)
+          padding: 0.5em 0em
+          margin: 0.5em 0.5em
+          border: 2px solid rgba(2, 29, 1, 0.859)
+          border-radius: 0.4em
+          font-size: 1em
+          font-weight: 700
+          transition: 0.3s ease-in-out
+          text-align: center
+          vertical-align: middle
+          cursor: pointer
+          &:hover
+            background: #b0d2be
+            color: rgba(2, 29, 1, 0.859)
+          &:active
+            transform: translateY(2px)
+        .active
+          background: rgba(193, 199, 152, 0.859)
+          color: #222222
+.index-page
+  .index-page-main
+    display: flex
+    flex-direction: row
+    justify-content: center
+    align-content: center
+    #workspaceLesson
+      &.workspace-lesson
+        padding: 2em 0.3em
+        max-height: 84.5vh
+        overflow-y: auto
+        overflow-x: hidden
+        &::-webkit-scrollbar-button
+          color: rgba(227, 227, 227, 0.7843137255)
+          background: #001f00
+          height: 0px
+        &::-webkit-scrollbar-thumb
+          border: 3.5px solid #fff
+          border-radius: 15px
+          background: #989898
+          visibility: hidden
+        &::-webkit-scrollbar
+          width: 9px
+          background: transparent
+        .lesson-section
+          .lesson-title
+            padding: 1em 1.5em
+            box-shadow: 1px 1px 6px rgba(59, 59, 59, 0.326)
+            border-radius: 1.3em
+            margin: 0.5em
+            p
+              font-size: 0.8em
+              font-weight: 600
+              color: #115c27
+            h3
+              font-size: 1.3em
+              font-weight: 600
+              color: #115c27
+              margin: 0.3em 0
+          .lesson-instructor
+            margin: 2em 0.7em
+            padding: 1em 1.5em
+            box-shadow: 2px 2px 8px rgba(59, 59, 59, 0.752)
+            border-radius: 1.3em
+            background: #013112
+            .title-box
+              width: 6em
+              border-radius: 1em
+              padding: 0.5em 1em
+              margin: 0.3em 0
+              background: #001f00
+              background: #fff
+              p
+                &.title
+                  font-size: 1.1em
+                  font-weight: 600
+                  color: #fff
+                  color: #115c27
+                  text-align: center
+                  margin: 0
+            .name
+              display: flex
+              justify-content: flex-start
+              align-items: center
+              flex-direction: column
+              i
+                font-size: 2em
+                color: #fff
+              h3
+                margin: 0.5em 1em
+                font-size: 1.7em
+                font-weight: 600
+                color: #115c27
+                color: #fff
+                letter-spacing: 1px
+          .lesson-instruction
+            margin: 2em 0.7em
+            margin-bottom: 5em
+            p
+              font-size: 1em
+              font-weight: 300
+              color: #000000
+              padding: 0.5em
+              &.title
+                font-size: 1.1em
+                font-weight: 600
+                color: #115c27
+                margin: 0.3em 0
+                border-bottom: 1px solid #000000
+          .animation-box
+            padding: 2em
+            margin: 1.7em
+            border-radius: 1.3em
+            box-shadow: inset 3px 8px 16px rgba(199, 197, 197, 0.9294117647)
+            background: rgba(216, 234, 220, 0.5333333333)
+            height: 32em
+            display: flex
+            justify-content: center
+            align-items: center
+            border: 0.2em dashed rgba(1, 49, 18, 0.3882352941)
+        &.more-width
+          padding: 2em 0.3em
+          max-height: 85vh
+          overflow-y: auto
+          overflow-x: hidden
+          &::-webkit-scrollbar-button
+            color: rgba(227, 227, 227, 0.7843137255)
+            background: #001f00
+            height: 0px
+          &::-webkit-scrollbar-thumb
+            border-radius: 15px
+            background: #989898
+            visibility: hidden
+            border: none
+          &::-webkit-scrollbar
+            width: 9px
+            background: transparent
+          .lesson-section
+            .lesson-title
+              padding: 1em 1.5em
+              box-shadow: 1px 1px 6px rgba(59, 59, 59, 0.2235294118)
+              border-radius: 1.3em
+              margin: 0.5em
+              p
+                font-size: 0.8em
+                font-weight: 600
+                color: #115c27
+              h3
+                font-size: 1.3em
+                font-weight: 600
+                color: #115c27
+                margin: 0.3em 0
+            .lesson-instructor
+              margin: 2em 0.7em
+              p
+                &.title
+                  font-size: 0.9em
+                  font-weight: 600
+                  color: #115c27
+                  margin: 0.3em 0
+              h3
+                margin: 0 0.5em
+                font-size: 1.2em
+                font-weight: 600
+                color: #115c27
+                letter-spacing: 1px
+            .lesson-instruction
+              margin: 2em 0.7em
+              margin-bottom: 5em
+              p
+                font-size: 1em
+                font-weight: 300
+                color: #000000
+                padding: 0.5em
+                &.title
+                  font-size: 0.9em
+                  font-weight: 600
+                  color: #115c27
+                  margin: 0.3em 0
+                  border-bottom: 1px solid #000000
+            .animation-box
+              padding: 2em
+              border-radius: 1.3em
+              box-shadow: inset 1px 2px 6px rgba(199, 197, 197, 0.9294117647)
+              background: rgba(216, 234, 220, 0.5333333333)
+              height: 12em
+              display: flex
+              justify-content: center
+              align-items: center
+.index-page .index-page-main #workspaceLesson.workspace-lesson:hover::-webkit-scrollbar-thumb, .index-page .index-page-main #workspaceLesson.workspace-lesson:focus::-webkit-scrollbar-thumb
+  visibility: visible
+.index-page .index-page-main #workspaceLesson.workspace-lesson.more-width:hover::-webkit-scrollbar-thumb, .index-page .index-page-main #workspaceLesson.workspace-lesson.more-width:focus::-webkit-scrollbar-thumb
+  visibility: visible
+.progress-chart-display
+  width: 90%
+  height: 13em
+  border-radius: 20px
+  background: #ffffff
+  box-shadow: 1px 1px 6px rgba(59, 59, 59, 0.2235294118)
+  padding: 20px 10px
+  margin: 1em
+  -webkit-user-select: none
+  .chart-display-box
+    display: flex
+    justify-content: center
+    align-content: center
+    flex-direction: column
+    .display-box-header
+      padding: 0 0.3em
+      margin: 0.5em
+      h2
+        font-size: 20px
+        font-style: 200
+        color: #013112
+        margin: 0.1em 0
+    .display-box-window
+      width: 95%
+      height: 10em
+      margin: 0.5em auto
+      padding: 0 0.8em
+      border-radius: 9px
+      h2
+        font-size: 14px
+        font-weight: 200
+.img-circle
+  border-radius: 50%
+  width: 6em
+  height: 6em
+  border: 2px solid #8e9681
+  padding: 0.5em
+.float-child
+  float: left
+  overflow: hidden
+  justify-content: center
+  align-items: center
+
+.float-about
+  overflow: hidden
+  justify-content: center
+  align-items: center
+
+.side-banner
+  background: linear-gradient(114.3deg, rgb(19, 126, 57) 0.2%, rgb(8, 65, 91) 68.5%)
+  color: yellowgreen
+  width: 55%
+.subtext
+  color: whitesmoke
+  text-decoration: none
+
+.strikethrough
+  text-decoration: line-through
+
