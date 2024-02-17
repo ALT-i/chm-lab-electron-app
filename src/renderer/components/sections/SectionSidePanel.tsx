@@ -68,14 +68,14 @@ function SectionSidePanel (props: any) {
                         <i className="fa fa-user-circle-o" aria-hidden="true"></i>
                     </div>
                 </div>
-                {substances? null:<div className="continue-class">
+                {/* {substances? null:<div className="continue-class">
                     <div className="continue-button">
                         <p>Continue class</p>
                         <span className="material-symbols-outlined">
                             patient_list
                         </span>
                     </div>
-                </div>}
+                </div>} */}
                 <div id="element" className="work">
                     {substances && <div className="workspace-workbench-compartment">
                         <div className="workbench">

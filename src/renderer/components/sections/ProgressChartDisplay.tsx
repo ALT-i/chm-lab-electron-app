@@ -8,7 +8,7 @@ function ProgressChartDisplay () {
                     <h2>Your progress so far</h2>
                 </div>
                 <div className="display-box-window">
-                    <h2>Coming soon ...</h2>
+                    <h2>Chart and analytics loading...</h2>
                 </div>
             </div>
         </section>

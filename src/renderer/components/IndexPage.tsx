@@ -20,6 +20,7 @@ function IndexPage () {
     const [classInstruction, setClassInstruction] = useState(null);
     const [classInstructor, setClassInstructor] = useState(null);
     const [classParameters, setClassParameters] = useState(null);
+    const [classVideo, setClassVideo] = useState(null);
 
 
 
@@ -69,6 +70,7 @@ function IndexPage () {
                     setClassInstructor(res.data.instructor);
                     setClassParameters(res.data.parameters);
                     setClassTitle(res.data.title);
+                    setClassVideo(res.data.video_file);
 
                 }).catch(err => {
                     if(err.message === "Network Error") {
@@ -111,12 +113,18 @@ function IndexPage () {
                                     <h3>{classInstructor}</h3>
                                 </div>
                             </div>
+                            <div className="lesson-instruction center">
+                              <video width="320" height="240" controls>
+                                      <source src={classVideo} type="video/mp4"/>
+                                      Error fetching demo video.
+                              </video>
+                            </div>
                             <div className="lesson-instruction">
                                 <p className="title">Instructions</p>
                                 <p dangerouslySetInnerHTML={{ __html: classInstruction }}></p>
                             </div>
                             <div className="animation-box">
-                                <p>Drag substances and apparatus here to start experimenting</p>
+                                <p>Drag substances and apparatus here to start experimenting...</p>
                             </div>
                         </div>
                     </div> : <ProgressChartDisplay/>
