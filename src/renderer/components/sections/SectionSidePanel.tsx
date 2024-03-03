@@ -88,9 +88,9 @@ function SectionSidePanel(props: any) {
                     <div className="apparatus-options">
                       <ul className="apparatus-list">
                         {apparatus &&
-                          apparatus.map((tool) => (
+                          apparatus.map((tool, index) => (
                             // <li>{tool}</li>
-                            <li>
+                            <li key={index}>
                               <DraggableItem item={tool} type="TOOL" />
                             </li>
                           ))}
@@ -107,9 +107,9 @@ function SectionSidePanel(props: any) {
                     <div className="substance-options">
                       <ul className="substance-list">
                         {substances &&
-                          substances.map((subs) => (
+                          substances.map((subs, index) => (
                             // <li>{subs}</li>
-                            <li>
+                            <li key={index}>
                               <DraggableItem item={subs} type="SUBSTANCE" />
                             </li>
                           ))}

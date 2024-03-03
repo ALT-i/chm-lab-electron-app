@@ -7,7 +7,7 @@ const server = {
   auth_signup: 'api/v1/register/',
   user: 'api/v1/users',
   workbench: 'api/v1/workbench',
-  workspace: 'api/v1/workspace/lesson',
+  workspace: 'api/v1/workspace/lessons',
   stack: ['react', 'python', 'electron.js'],
 }
 export default server

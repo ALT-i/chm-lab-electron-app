@@ -8,7 +8,7 @@ interface DraggableItemProps {
 function DraggableItem({ item, type }: DraggableItemProps) {
   const [{ isDragging }, dragRef] = useDrag(() => ({
     type: type,
-    item: { id: item },
+    item: item,
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
@@ -16,7 +16,8 @@ function DraggableItem({ item, type }: DraggableItemProps) {
 
   return (
     <div ref={dragRef} style={{ opacity: isDragging ? 0.5 : 1 }}>
-      {item}
+      <img src={item.image}/>
+      <p>{item.name}</p>
     </div>
   )
 }
