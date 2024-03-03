@@ -52,6 +52,8 @@ function AnimationBox() {
         .querySelector('.animation-box')
         .getBoundingClientRect()
 
+      console.log(boxRect.width, boxRect.height)
+
       newX = Math.min(Math.max(newX, 0), boxRect.width - 10) // Assuming the draggable item is 50px wide
       newY = Math.min(Math.max(newY, 0), boxRect.height - 10) // Assuming the draggable item is 50px tall
 
@@ -93,7 +95,6 @@ function AnimationBox() {
       style={{
         position: 'relative',
         // overflow: 'hidden',
-        width: '100%',
         height: '32em',
       }}
     >
@@ -110,7 +111,6 @@ function AnimationBox() {
               cursor: 'move',
               textAlign: 'justify',
               alignItems: 'center',
-
             }}
           >
             <img
@@ -131,6 +131,12 @@ function AnimationBox() {
       ) : (
         <p>Drag substances and apparatus here to start experimenting...</p>
       )}
+      <button
+        onClick={() => setDroppedItems([])}
+        className="absolute top-2 right-2 border border-green-500 text-green-500 bg-gray-100 px-4 py-2 text-lg rounded cursor-pointer shadow transition-all hover:bg-green-500 hover:text-white hover:shadow-lg"
+      >
+        Clear WorkBench
+      </button>
     </div>
   )
 }

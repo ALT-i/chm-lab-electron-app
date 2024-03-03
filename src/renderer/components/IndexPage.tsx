@@ -127,7 +127,7 @@ function IndexPage() {
                 </video>
               </div>
               <div className="lesson-instruction">
-                <p className="title">Instructions</p>
+                <p className="title" >Instructions</p>
                 <p dangerouslySetInnerHTML={{ __html: classInstruction }}></p>
               </div>
               <AnimationBox />
