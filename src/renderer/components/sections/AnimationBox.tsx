@@ -52,10 +52,8 @@ function AnimationBox() {
         .querySelector('.animation-box')
         .getBoundingClientRect()
 
-      console.log(boxRect.width, boxRect.height)
-
-      newX = Math.min(Math.max(newX, 0), boxRect.width - 10) // Assuming the draggable item is 50px wide
-      newY = Math.min(Math.max(newY, 0), boxRect.height - 10) // Assuming the draggable item is 50px tall
+      newX = Math.min(Math.max(newX, 0), boxRect.width - 162) // Assuming the draggable item is 50px wide
+      newY = Math.min(Math.max(newY, 0), boxRect.height - 162) // Assuming the draggable item is 50px tall
 
       setDroppedItems((items) =>
         items.map((item) =>
