@@ -15,6 +15,8 @@ function SectionSidePanel(props: any) {
   const substances = props.substances
   const apparatus = props.tools
   const classInstructor = props.classInstructor
+  const isPanelOpen = props.isPanelOpen
+  const togglePanel = props.togglePanel
   // console.log(substances, apparatus, classInstructor)
 
   const navigate = useNavigate()
@@ -45,6 +47,10 @@ function SectionSidePanel(props: any) {
     store.setAboutWindowState(true)
   }
 
+  const goBack = () => {
+    navigate(-1) // Go back to the previous page
+  }
+
   function goToClassList() {
     setTimeout(() => navigate(`/select-class`), 200)
   }
@@ -53,10 +59,20 @@ function SectionSidePanel(props: any) {
   // })
 
   return (
-    <section className="left-side-panel">
-      <div className="panel">
+    <section className="relative left-side-panel">
+      <button
+        className="hamburger-menu p-2 absolute top-0 left-1 z-10 border my-1 mx-2 border-green-500 text-darkgreen-500 bg-gray-100 px-4 py-2 text-lg rounded cursor-pointer shadow transition-all hover:bg-green-500 hover:text-white hover:shadow"
+        onClick={togglePanel}
+      >
+        &#9776; {/* Hamburger icon */}
+      </button>
+      <div
+        className={`panel ${
+          isPanelOpen ? 'block' : 'hidden'
+        } bg-gray-200 w-64 h-screen fixed top-0 left-0 transition-all duration-300 ease-in-out`}
+      >
         <div className="basic-profile">
-          <div className="user-name">
+          <div className="user-name pt-10">
             <p>Hi {user_fname}</p>
           </div>
           <div className="user-picture">
@@ -120,6 +136,12 @@ function SectionSidePanel(props: any) {
               </div>
             </div>
           )}
+          <button
+            className="bg-white hover:bg-gray-100 text-gray-800 float-right font-semibold py-2 px-5 my-1 mx-1 border border-gray-400 rounded shadow"
+            onClick={goBack}
+          >
+            &#10094;
+          </button>
           <div className="profile-options">
             <div className="profile-option">
               <div className="option" onClick={goToClassList}>

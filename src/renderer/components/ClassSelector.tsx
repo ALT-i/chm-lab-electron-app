@@ -5,8 +5,9 @@ import axios from 'axios'
 import server from '../utils'
 import DisplayClasses from './sections/DisplayClasses'
 
-const ClassSelector = () => {
+const ClassSelector = (props: any) => {
   const [hashedClasses, setHashedClasses] = useState(null)
+  const isPanelOpen = props.isPanelOpen
   const navigate = useNavigate()
 
   const addCompletedClass = (id: number) => {
@@ -87,7 +88,9 @@ const ClassSelector = () => {
   }, [])
 
   return (
-    <div className="class-selector">
+    <div className={`main-content class-selector transition-all duration-300 ease-in-out ${
+        isPanelOpen ? 'ml-64' : 'ml-0'
+    }`}>
       <div className="selector-header">
         <h1>Pick a class</h1>
       </div>

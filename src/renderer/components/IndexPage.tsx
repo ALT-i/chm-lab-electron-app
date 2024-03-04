@@ -12,7 +12,7 @@ import SectionSidePanel from './sections/SectionSidePanel'
 import ProgressChartDisplay from './sections/ProgressChartDisplay'
 import AnimationBox from './sections/AnimationBox'
 
-function IndexPage() {
+function IndexPage(props: any) {
   const navigate = useNavigate()
   const { class_id } = useParams()
   const [chosenClass, setChosenClass] = useState(null)
@@ -23,6 +23,13 @@ function IndexPage() {
   const [classInstructor, setClassInstructor] = useState(null)
   const [classParameters, setClassParameters] = useState(null)
   const [classVideo, setClassVideo] = useState(null)
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false)
+
+  const toggleTooltip = () => {
+    setIsTooltipOpen(!isTooltipOpen)
+  }
+
+  const isPanelOpen = props.isPanelOpen
 
   //Fetch class details from local machine with node process and render with IPC signals
 
@@ -95,47 +102,46 @@ function IndexPage() {
 
   return (
     <div className="index-page">
-      {chosenClass ? (
-        <SectionSidePanel
-          substances={substances}
-          tools={tools}
-          classInstructor={classInstructor}
-        />
-      ) : (
-        <SectionSidePanel />
-      )}
-      <div className="index-page-main">
+      <div
+        className={`main-content index-page-main transition-all duration-300 ease-in-out ${
+          isPanelOpen ? 'ml-64' : 'ml-0'
+        }`}
+      >
         {chosenClass ? (
           <div id="workspaceLesson" className="workspace-lesson">
             <div className="lesson-section">
               <div className="lesson-title">
                 <h3>{classTitle}</h3>
-                <p>Parameters: {classParameters}</p>
+                <button
+                  className="hamburger-menu p-2 absolute top-3 right-3 z-50 text-2xl bg-green-100 hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-full shadow"
+                  onClick={toggleTooltip}
+                  title="Toggle Sidebar"
+                >
+                  &#128712; {/* Hamburger icon */}
+                </button>
+                {/* <h3 className='float-right'>Instructor: {classInstructor}</h3> */}
+                {/* <p>Parameters: {classParameters}</p> */}
               </div>
-              <div className="lesson-instructor">
-                <div className="title-box">
-                  <p className="title">Instructor</p>
+              <div
+                className={`panel ${
+                  isTooltipOpen ? 'block' : 'hidden'
+                } bg-gray-200 z-30 w-96 h-screen fixed top-0 right-0 transition-all duration-300 ease-in-out transform
+                py-16 overflow-auto ${
+                  isTooltipOpen ? 'translate-x-0' : 'translate-x-full'
+                }`}
+              >
+                <div className="container">
+                  <video width="320" height="240" controls>
+                    <source src={classVideo} type="video/mp4" />
+                    Error fetching demo video.
+                  </video>
                 </div>
-                <div className="name">
-                  <h3>{classInstructor}</h3>
+                <div className="lesson-instruction">
+                  <p className="title">Instructions</p>
+                  <p dangerouslySetInnerHTML={{ __html: classInstruction }}></p>
                 </div>
-              </div>
-              <div className="lesson-instruction center">
-                <video width="320" height="240" controls>
-                  <source src={classVideo} type="video/mp4" />
-                  Error fetching demo video.
-                </video>
-              </div>
-              <div className="lesson-instruction">
-                <p className="title" >Instructions</p>
-                <p dangerouslySetInnerHTML={{ __html: classInstruction }}></p>
               </div>
               <AnimationBox />
-              {/* <div ref={drop} className="animation-box">
-                <p>
-                  Drag substances and apparatus here to start experimenting...
-                </p>
-              </div> */}
             </div>
           </div>
         ) : (

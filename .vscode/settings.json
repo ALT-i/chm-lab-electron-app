@@ -1,0 +1,4 @@
+{
+    "cursor.chat.smoothStreaming": false,
+    "gitlens.ai.experimental.openai.model": "gpt-4"
+}

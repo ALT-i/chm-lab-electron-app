@@ -69,7 +69,65 @@ function AnimationBox() {
   const endDrag = useCallback(() => {
     setDragging(false)
     setCurrentItem(null)
-  }, [])
+    // Check for overlaps with items of the same type
+    droppedItems.forEach((item) => {
+      if (item.id !== currentItem.id && item.type === currentItem.type) {
+        if (doItemsOverlap(currentItem, item)) {
+          console.log("OVERLAPP!!!")
+          // Perform merge or action based on your requirements
+          mergeItems(currentItem, item)
+          // Or perform another action
+          // performAction(currentItem, item);
+        }
+      }
+    })
+  }, [dragging, currentItem, droppedItems])
+
+  function doItemsOverlap(item1, item2) {
+    const rect1 = {
+      x: item1.position.x,
+      y: item1.position.y,
+      width: 50,
+      height: 50,
+    } // Assuming fixed size for simplicity
+    const rect2 = {
+      x: item2.position.x,
+      y: item2.position.y,
+      width: 50,
+      height: 50,
+    }
+
+    return !(
+      rect1.x + rect1.width < rect2.x ||
+      rect1.y + rect1.height < rect2.y ||
+      rect2.x + rect2.width < rect1.x ||
+      rect2.y + rect2.height < rect1.y
+    )
+  }
+
+  function generateUniqueId() {
+    // Generate a random number and concatenate it with a timestamp to create a unique ID
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 5)
+  }
+
+  function mergeItems(item1, item2) {
+    setDroppedItems((currentItems) => {
+      const filteredItems = currentItems.filter(
+        (item) => item.id !== item1.id && item.id !== item2.id
+      )
+      const mergedItem = {
+        id: generateUniqueId(), // Generate a unique ID for the merged item
+        type: item1.type, // Assuming item1 and item2 have the same type
+        position: {
+          x: (item1.position.x + item2.position.x) / 2,
+          y: (item1.position.y + item2.position.y) / 2,
+        },
+        image: item1.image,
+        // Add any other properties needed for the merged item
+      }
+      return [...filteredItems, mergedItem]
+    })
+  }
 
   useEffect(() => {
     if (dragging) {
@@ -89,7 +147,7 @@ function AnimationBox() {
   return (
     <div
       ref={dropRef}
-      className="animation-box"
+      className="animation-box lesson-instruction"
       style={{
         position: 'relative',
         // overflow: 'hidden',

@@ -362,7 +362,6 @@ html body header .header-section .topbar-icons .icon-flex .icon-flex-close:hover
 }
 
 .left-side-panel {
-  height: 100%;
   -webkit-user-select: none;
 }
 .left-side-panel .panel {
@@ -1123,15 +1122,14 @@ html body header .header-section .topbar-icons .icon-flex .icon-flex-close:hover
   color: #222222;
 }
 
-.index-page .index-page-main {
+/* .index-page .index-page-main {
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-content: center;
-}
+} */
 .index-page .index-page-main #workspaceLesson.workspace-lesson {
-  padding: 2em 0.3em;
-  max-height: 84.5vh;
+  max-height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
 }
