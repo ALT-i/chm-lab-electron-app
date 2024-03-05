@@ -4,6 +4,8 @@ import React from 'react'
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
+import { ThemeProvider } from "@material-tailwind/react";
+
 
 import { WindowStoreProvider } from './store'
 import { AppRoutes } from './routes'
@@ -13,10 +15,12 @@ import 'material-symbols'
 
 ReactDom.createRoot(document.querySelector('app') as HTMLElement).render(
   <React.StrictMode>
-    <DndProvider backend={HTML5Backend}>
-      <WindowStoreProvider>
-        <AppRoutes />
-      </WindowStoreProvider>
-    </DndProvider>
+    <ThemeProvider>
+      <DndProvider backend={HTML5Backend}>
+        <WindowStoreProvider>
+          <AppRoutes />
+        </WindowStoreProvider>
+      </DndProvider>
+    </ThemeProvider>
   </React.StrictMode>
 )

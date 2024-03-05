@@ -3,14 +3,18 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-
-import { DndProvider, useDrop } from 'react-dnd'
-import { HTML5Backend } from 'react-dnd-html5-backend'
+import {
+  Drawer,
+  Button,
+  Typography,
+  IconButton,
+} from '@material-tailwind/react'
 
 import server from '../utils'
 import SectionSidePanel from './sections/SectionSidePanel'
 import ProgressChartDisplay from './sections/ProgressChartDisplay'
 import AnimationBox from './sections/AnimationBox'
+import StockRoomPanel from './sections/StockRoomPanel'
 
 function IndexPage(props: any) {
   const navigate = useNavigate()
@@ -24,9 +28,17 @@ function IndexPage(props: any) {
   const [classParameters, setClassParameters] = useState(null)
   const [classVideo, setClassVideo] = useState(null)
   const [isTooltipOpen, setIsTooltipOpen] = useState(false)
+  const [drawerState, setOpenDrawer] = React.useState(false)
+
+  const openDrawer = () => setOpenDrawer(true)
+  const closeDrawer = () => setOpenDrawer(false)
 
   const toggleTooltip = () => {
     setIsTooltipOpen(!isTooltipOpen)
+  }
+
+  const goBack = () => {
+    navigate(-1) // Go back to the previous page
   }
 
   const isPanelOpen = props.isPanelOpen
@@ -59,7 +71,6 @@ function IndexPage(props: any) {
   const getWorkbench = () => {
     if (class_id) {
       setChosenClass(class_id)
-      console.log(class_id)
 
       axios
         .get(`${server.absolute_url}/${server.workspace}/${class_id}/`, {
@@ -69,7 +80,6 @@ function IndexPage(props: any) {
           },
         })
         .then((res) => {
-          console.log(res)
           //Save following class details to local machine with IPC signals
 
           // setSubstances(res.data.substances);
@@ -100,21 +110,28 @@ function IndexPage(props: any) {
     // });
   }, [])
 
+  console.log(classVideo)
   return (
     <div className="index-page">
       <div
         className={`main-content index-page-main transition-all duration-300 ease-in-out ${
-          isPanelOpen ? 'ml-64' : 'ml-0'
+          isPanelOpen ? 'ml-52' : 'ml-16'
         }`}
       >
         {chosenClass ? (
           <div id="workspaceLesson" className="workspace-lesson">
             <div className="lesson-section">
-              <div className="lesson-title">
+              <div className="lesson-title flex">
+                <button
+                  className="bg-white hover:bg-gray-100 text-gray-800 float-right font-semibold py-2 px-5 my-1 mx-1 border border-gray-400 rounded shadow"
+                  onClick={goBack}
+                >
+                  &#10094;
+                </button>
                 <h3>{classTitle}</h3>
                 <button
-                  className="hamburger-menu p-2 absolute top-3 right-3 z-50 text-2xl bg-green-100 hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-full shadow"
-                  onClick={toggleTooltip}
+                  className="text-2xl text-gray-800 font-semibold px-4 rounded-full shadow-inner"
+                  onClick={openDrawer}
                   title="Toggle Sidebar"
                 >
                   &#128712; {/* Hamburger icon */}
@@ -122,26 +139,73 @@ function IndexPage(props: any) {
                 {/* <h3 className='float-right'>Instructor: {classInstructor}</h3> */}
                 {/* <p>Parameters: {classParameters}</p> */}
               </div>
-              <div
-                className={`panel ${
-                  isTooltipOpen ? 'block' : 'hidden'
-                } bg-gray-200 z-30 w-96 h-screen fixed top-0 right-0 transition-all duration-300 ease-in-out transform
+              <Drawer
+                size={500}
+                placement="right"
+                open={drawerState}
+                onClose={closeDrawer}
+                className="p-4"
+              >
+                {/* <div //intrsuction panel
+                  className={`panel ${
+                    isTooltipOpen ? 'block' : 'hidden'
+                  } bg-gray-200 z-30 w-96 h-screen fixed top-0 right-0 transition-all duration-300 ease-in-out transform
                 py-16 overflow-auto ${
                   isTooltipOpen ? 'translate-x-0' : 'translate-x-full'
                 }`}
-              >
-                <div className="container">
-                  <video width="320" height="240" controls>
-                    <source src={classVideo} type="video/mp4" />
-                    Error fetching demo video.
-                  </video>
+                > */}
+                <div className=" h-full overflow-auto">
+                  <div className="mb-6 flex items-center justify-between">
+                    <Typography variant="h5" color="blue-gray">
+                      Instructions
+                    </Typography>
+                    <IconButton
+                      variant="text"
+                      color="blue-gray"
+                      onClick={closeDrawer}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                        className="h-5 w-5"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </IconButton>
+                  </div>
+                  <div className="lesson-instruction">
+                    <video
+                      className="h-full w-full mb-5 rounded-lg"
+                      controls
+                      autoPlay
+                      muted
+                      key={classVideo}
+                    >
+                      <source src={classVideo} type="video/mp4" />
+                      Error fetching demo video.
+                    </video>
+                    <p
+                      dangerouslySetInnerHTML={{ __html: classInstruction }}
+                    ></p>
+                  </div>
                 </div>
-                <div className="lesson-instruction">
-                  <p className="title">Instructions</p>
-                  <p dangerouslySetInnerHTML={{ __html: classInstruction }}></p>
-                </div>
+                {/* </div> */}
+              </Drawer>
+              <div className="flex">
+                <StockRoomPanel
+                  substances={substances}
+                  tools={tools}
+                  classInstructor={classInstructor}
+                />
+                <AnimationBox />
               </div>
-              <AnimationBox />
             </div>
           </div>
         ) : (

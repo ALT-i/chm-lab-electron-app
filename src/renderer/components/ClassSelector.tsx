@@ -88,9 +88,11 @@ const ClassSelector = (props: any) => {
   }, [])
 
   return (
-    <div className={`main-content class-selector transition-all duration-300 ease-in-out ${
-        isPanelOpen ? 'ml-64' : 'ml-0'
-    }`}>
+    <div
+      className={`main-content class-selector transition-all duration-300 ease-in-out ${
+        isPanelOpen ? 'ml-52' : 'ml-16'
+      }`}
+    >
       <div className="selector-header">
         <h1>Pick a class</h1>
       </div>

@@ -15,9 +15,13 @@ function DraggableItem({ item, type }: DraggableItemProps) {
   }))
 
   return (
-    <div ref={dragRef} style={{ opacity: isDragging ? 0.5 : 1 }}>
-      <img src={item.image}/>
-      <p>{item.name}</p>
+    <div
+      ref={dragRef}
+      className="align-top"
+      style={{ opacity: isDragging ? 0.5 : 1 }}
+    >
+      <img className="w-40 h-20 text-center" src={item.image} />
+      <p className="text-pretty text-sm truncate text-center">{item.name}</p>
     </div>
   )
 }

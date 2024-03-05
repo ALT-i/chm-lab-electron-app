@@ -50,7 +50,7 @@ function AnimationBox() {
       // Get the bounding rectangle of the animation box
       const boxRect = document
         .querySelector('.animation-box')
-        .getBoundingClientRect()
+        ?.getBoundingClientRect()
 
       newX = Math.min(Math.max(newX, 0), boxRect.width - 162) // Assuming the draggable item is 50px wide
       newY = Math.min(Math.max(newY, 0), boxRect.height - 162) // Assuming the draggable item is 50px tall
@@ -73,7 +73,7 @@ function AnimationBox() {
     droppedItems.forEach((item) => {
       if (item.id !== currentItem.id && item.type === currentItem.type) {
         if (doItemsOverlap(currentItem, item)) {
-          console.log("OVERLAPP!!!")
+          console.log('OVERLAPP!!!')
           // Perform merge or action based on your requirements
           mergeItems(currentItem, item)
           // Or perform another action
@@ -147,7 +147,7 @@ function AnimationBox() {
   return (
     <div
       ref={dropRef}
-      className="animation-box lesson-instruction"
+      className="w-3/4 h-full animation-box !ml-0 !mr-2"
       style={{
         position: 'relative',
         // overflow: 'hidden',
@@ -155,7 +155,7 @@ function AnimationBox() {
       }}
     >
       {/* Animation content */}
-      {droppedItems ? (
+      {droppedItems.length > 0 ? (
         droppedItems.map((item, index) => (
           <div
             key={index}
@@ -164,17 +164,17 @@ function AnimationBox() {
               position: 'absolute',
               left: item.position.x,
               top: item.position.y,
-              cursor: 'move',
+              cursor: 'grabbing',
               textAlign: 'justify',
               alignItems: 'center',
             }}
           >
             <img
               src={item.image}
-              alt=""
+              alt={item.name}
               style={{ width: '10em', height: '10em', display: 'block' }}
             />
-            <p>{item.name}</p>
+            <p className="text-xs truncate text-center">{item.name}</p>
           </div>
           // <div key={index}>
           //   <img
@@ -185,7 +185,9 @@ function AnimationBox() {
           // </div>
         ))
       ) : (
-        <p>Drag substances and apparatus here to start experimenting...</p>
+        <p className="text-center align-middle my-52 mx-24 shadow-inner bg-gray-200">
+          Drag substances and apparatus here to start experimenting...
+        </p>
       )}
       <button
         onClick={() => setDroppedItems([])}
@@ -194,6 +196,8 @@ function AnimationBox() {
         Clear WorkBench
       </button>
     </div>
+    //   <div className="w-1/4 h-full fixed">WIUNN</div>
+    // </div>
   )
 }
 

@@ -366,8 +366,7 @@ html body header .header-section .topbar-icons .icon-flex .icon-flex-close:hover
 }
 .left-side-panel .panel {
   float: left;
-  width: 15em;
-  height: 95vh;
+  width: 13em;
   background: rgba(224, 244, 223, 0.5294117647);
 }
 .left-side-panel .panel .basic-profile {
@@ -564,10 +563,7 @@ html body header .header-section .topbar-icons .icon-flex .icon-flex-close:hover
 .left-side-panel .panel #element.work .workspace-workbench-compartment .workbench .workbench-substances .substance-section .substance-options ul.substance-list li:hover {
   background: rgba(17, 84, 37, 0.2588235294);
 }
-.left-side-panel .panel .profile-options {
-  margin: 4em auto 0 auto;
-  transition: 0.3s ease-in-out;
-}
+
 .left-side-panel .panel .profile-options .profile-option .option {
   margin: 5px 0;
   padding: 0 10px;

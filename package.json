@@ -25,6 +25,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "@material-tailwind/react": "^2.1.9",
     "axios": "^1.6.3",
     "electron-router-dom": "^1.0.5",
     "jwt-decode": "^4.0.0",
