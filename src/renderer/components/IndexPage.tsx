@@ -144,7 +144,7 @@ function IndexPage(props: any) {
                 placement="right"
                 open={drawerState}
                 onClose={closeDrawer}
-                className="p-4"
+                className="p-4 scrollbar scrollbar-thumb-rounded"
               >
                 {/* <div //intrsuction panel
                   className={`panel ${
@@ -155,8 +155,15 @@ function IndexPage(props: any) {
                 }`}
                 > */}
                 <div className=" h-full overflow-auto">
+                  <Typography variant="h5" color="green" textGradient>
+                    {classTitle}
+                  </Typography>
+                  <Typography variant="paragraph" color="blue-gray">
+                    Instructor: {classInstructor}
+                  </Typography>
+
                   <div className="mb-6 flex items-center justify-between">
-                    <Typography variant="h5" color="blue-gray">
+                    <Typography variant="h6" color="blue-gray">
                       Instructions
                     </Typography>
                     <IconButton
