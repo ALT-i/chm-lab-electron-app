@@ -84,7 +84,7 @@ function SectionSidePanel(props: any) {
                 alt="brand"
                 className="h-8 w-8"
               /> */}
-              <div className="row flex">
+              {/* <div className="row flex">
                 <img
                   className="h-7 w-7 rounded-full"
                   src="./noun_logo.png"
@@ -95,14 +95,9 @@ function SectionSidePanel(props: any) {
                   src="./acetel_logo.png"
                   alt=""
                 />
-              </div>
-              <Typography variant="h6" color="white">
+              </div> */}
+              <Typography variant="h6" color="white" className="px-3">
                 CHM LAB v1
-              </Typography>
-            </div>
-            <div className="basic-profile">
-              <Typography variant="h6" color="white" className="px-5">
-                <p>Hi {user_fname}</p>
               </Typography>
               <IconButton
                 variant="text"
@@ -124,6 +119,11 @@ function SectionSidePanel(props: any) {
                   />
                 </svg>
               </IconButton>
+            </div>
+            <div className="basic-profile">
+              <Typography variant="h6" color="white" className="px-5">
+                <p>Hi {user_fname}</p>
+              </Typography>
             </div>
             {/* {substances? null:<div className="continue-class">
                       <div className="continue-button">

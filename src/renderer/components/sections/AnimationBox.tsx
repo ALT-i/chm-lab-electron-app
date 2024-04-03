@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect } from 'react'
 import { useState } from 'react'
 import { useDrop } from 'react-dnd'
+import TokenizeFormula from '../Formula'
 
 interface Item {
   type: string
@@ -147,11 +148,11 @@ function AnimationBox() {
   return (
     <div
       ref={dropRef}
-      className="w-3/4 h-full animation-box !ml-0 !mr-2"
+      className="w-3/4 animation-box !ml-0 !mr-2 overflow-auto"
       style={{
         position: 'relative',
-        // overflow: 'hidden',
-        height: '32em',
+        overflow: 'hidden',
+        // height: '32em',
       }}
     >
       {/* Animation content */}
@@ -174,7 +175,9 @@ function AnimationBox() {
               alt={item.name}
               style={{ width: '10em', height: '10em', display: 'block' }}
             />
-            <p className="text-xs truncate text-center">{item.name}</p>
+            <p className="text-xs truncate text-center">
+              <TokenizeFormula formula={item.formula} />
+            </p>
           </div>
           // <div key={index}>
           //   <img
@@ -189,12 +192,21 @@ function AnimationBox() {
           Drag substances and apparatus here to start experimenting...
         </p>
       )}
-      <button
-        onClick={() => setDroppedItems([])}
-        className="absolute top-2 right-2 border border-green-500 text-green-500 bg-gray-100 px-4 py-2 text-lg rounded cursor-pointer shadow transition-all hover:bg-green-500 hover:text-white hover:shadow-lg"
-      >
-        Clear WorkBench
-      </button>
+      <div className="absolute top-2 right-2 border">
+        <button
+          // onClick={() => setDroppedItems([])}
+          className="border-green-500 text-green-500 bg-gray-100 mx-1 px-4 py-2 text-lg rounded cursor-pointer shadow transition-all hover:bg-green-500 hover:text-white hover:shadow-lg"
+        >
+          ✔️
+          <p className="text-xs">Submit</p>
+        </button>
+        <button
+          onClick={() => setDroppedItems([])}
+          className="border-green-500 text-green-500 bg-gray-100 mx-1 px-4 py-2 text-lg rounded cursor-pointer shadow transition-all hover:bg-green-500 hover:text-white hover:shadow-lg"
+        >
+          ❌<p className="text-xs">Clear Workbench</p>
+        </button>
+      </div>
     </div>
     //   <div className="w-1/4 h-full fixed">WIUNN</div>
     // </div>

@@ -118,6 +118,25 @@ function IndexPage(props: any) {
           isPanelOpen ? 'ml-52' : 'ml-16'
         }`}
       >
+        <div className="flex bg-green-900 py-5 px-2 shadow-lg rounded-lg">
+          <div className="row px-1">
+            <img
+              className="h-7 w-8 rounded-full"
+              src="./noun_logo.png"
+              alt=""
+            />
+            <img
+              className="h-7 w-8 rounded-full"
+              src="./acetel_logo.png"
+              alt=""
+            />
+          </div>
+          <Typography variant="h6" color="white">
+            National Open University of Nigeria (NOUN)
+            <p />
+            Africa Centre of Excellence on Technology Enhanced Learning (ACETEL)
+          </Typography>
+        </div>
         {chosenClass ? (
           <div id="workspaceLesson" className="workspace-lesson">
             <div className="lesson-section">
@@ -205,7 +224,12 @@ function IndexPage(props: any) {
                 </div>
                 {/* </div> */}
               </Drawer>
-              <div className="flex">
+              <div
+                className="flex"
+                style={{
+                  height: '80vh',
+                }}
+              >
                 <StockRoomPanel
                   substances={substances}
                   tools={tools}

@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron'
+import { BrowserWindow, screen } from 'electron'
 import { join } from 'path'
 
 import { ENVIRONMENT } from 'shared/constants'
@@ -6,17 +6,22 @@ import { createWindow } from 'main/factories'
 import { displayName } from '~/package.json'
 
 export async function MainWindow() {
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize
+
+  const windowWidth = Math.round(width * 0.9)
+  const windowHeight = Math.round(height * 0.9)
   const window = createWindow({
     id: 'main',
     title: displayName,
-    width: 1200,
-    height: 700,
+    width: windowWidth,
+    height: windowHeight,
     show: false,
     center: true,
     movable: true,
-    resizable: false,
-    alwaysOnTop: true,
+    resizable: true,
+    alwaysOnTop: false,
     autoHideMenuBar: true,
+    icon: join(__dirname, '../resources/build/icons/icon.ico'),
 
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
