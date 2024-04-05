@@ -176,7 +176,7 @@ function AnimationBox() {
               style={{ width: '10em', height: '10em', display: 'block' }}
             />
             <p className="text-xs truncate text-center">
-              <TokenizeFormula formula={item.formula} />
+              {/* <TokenizeFormula formula={item.formula} /> */}
             </p>
           </div>
           // <div key={index}>

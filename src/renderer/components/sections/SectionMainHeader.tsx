@@ -13,13 +13,13 @@ function SectionMainHeader() {
         <img className="img-circle" src="./noun_logo.png" alt="" />
         <img className="img-circle" src="./acetel_logo.png" alt="" />
       </div>
-      <div>
-        <h2 className="side-banner-text">
+      <div className="">
+        <h2 className="side-banner-text mt-5 mb-8">
           National Open University of Nigeria (NOUN)
-          <p />
+          <br />
           Africa Centre of Excellence on Technology Enhanced Learning (ACETEL)
         </h2>
-        <h3 className="subtext">
+        <h3 className="subtext mt-12">
           {/* <p onClick={() => navigate('anotherScreen')} className='subtext'> */}
           <p className="subtext">CHM Virtual Lab</p>
         </h3>
