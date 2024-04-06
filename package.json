@@ -2,7 +2,7 @@
   "displayName": "NOUN<>ACETEL CHM vLab",
   "name": "chm-lab",
   "description": "CHM 191 Lab",
-  "version": "0.6.1",
+  "version": "0.6.5",
   "main": "./node_modules/.dev/main/index.js",
   "resources": "src/resources",
   "author": {

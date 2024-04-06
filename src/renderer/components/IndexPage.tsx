@@ -26,6 +26,7 @@ function IndexPage(props: any) {
   const [classInstruction, setClassInstruction] = useState(null)
   const [classInstructor, setClassInstructor] = useState(null)
   const [classParameters, setClassParameters] = useState(null)
+  const [classProcedure, setClassProcedure] = useState(null)
   const [classVideo, setClassVideo] = useState(null)
   const [isTooltipOpen, setIsTooltipOpen] = useState(false)
   const [drawerState, setOpenDrawer] = React.useState(false)
@@ -89,6 +90,7 @@ function IndexPage(props: any) {
           setSubstances(res.data.substances)
           setClassInstruction(res.data.instructions)
           setClassInstructor(res.data.instructor)
+          setClassProcedure(res.data.procedure)
           setClassParameters(res.data.parameters)
           setClassTitle(res.data.title)
           setClassVideo(res.data.video_file)
@@ -140,21 +142,26 @@ function IndexPage(props: any) {
         {chosenClass ? (
           <div id="workspaceLesson" className="workspace-lesson">
             <div className="lesson-section">
-              <div className="lesson-title flex">
-                <button
-                  className="bg-white hover:bg-gray-100 text-gray-800 float-right font-semibold py-2 px-5 my-1 mx-1 border border-gray-400 rounded shadow"
-                  onClick={goBack}
-                >
-                  &#10094;
-                </button>
-                <h3>{classTitle}</h3>
-                <button
-                  className="text-2xl text-gray-800 font-semibold px-4 rounded-full shadow-inner"
-                  onClick={openDrawer}
-                  title="Toggle Sidebar"
-                >
-                  &#128712; {/* Hamburger icon */}
-                </button>
+              <div className="lesson-title">
+                <div className="flex">
+                  <button
+                    className="bg-white hover:bg-gray-100 text-gray-800 float-right font-semibold py-2 px-5 my-1 mx-1 border border-gray-400 rounded shadow"
+                    onClick={goBack}
+                  >
+                    &#10094;
+                  </button>
+                  <h3>{classTitle}</h3>
+                </div>
+                <p>
+                  <button
+                    className=" text-xl text-gray-800 font-normal px-4 my-2 rounded-full border shadow-lg"
+                    onClick={openDrawer}
+                    title="Toggle Sidebar"
+                  >
+                    Instructions
+                  </button>
+                </p>
+
                 {/* <h3 className='float-right'>Instructor: {classInstructor}</h3> */}
                 {/* <p>Parameters: {classParameters}</p> */}
               </div>
@@ -227,7 +234,7 @@ function IndexPage(props: any) {
               <div
                 className="flex"
                 style={{
-                  height: '80vh',
+                  height: '75vh',
                 }}
               >
                 <StockRoomPanel
@@ -235,7 +242,7 @@ function IndexPage(props: any) {
                   tools={tools}
                   classInstructor={classInstructor}
                 />
-                <AnimationBox />
+                <AnimationBox procedure={classProcedure} />
               </div>
             </div>
           </div>

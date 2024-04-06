@@ -24,7 +24,7 @@ function SectionSidePanel(props: any) {
   const store = useWindowStore().about
 
   const userData = JSON.parse(window.localStorage.getItem('user_data'))
-  const user_fname = userData.first_name
+  const user_fname = userData?.first_name
 
   // document.addEventListener("mousemove", function(e){
   //     const ele = document.getElementById('element');

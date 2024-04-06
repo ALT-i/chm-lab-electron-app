@@ -2,14 +2,19 @@ import { useDrag } from 'react-dnd'
 import TokenizeFormula from '../Formula'
 
 interface DraggableItemProps {
-  item: string
+  item: {
+    id: string // Assuming the item now includes an id
+    image: string
+    name: string
+    formula?: string // Assuming formula is optional
+  }
   type: 'SUBSTANCE' | 'TOOL'
 }
 
 function DraggableItem({ item, type }: DraggableItemProps) {
   const [{ isDragging }, dragRef] = useDrag(() => ({
     type: type,
-    item: item,
+    item: { ...item, id: `${type}-${item.id}` },
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
