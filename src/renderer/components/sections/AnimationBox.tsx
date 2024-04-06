@@ -27,11 +27,13 @@ function AnimationBox(props: any) {
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalContent, setModalContent] = useState('')
+  const [modalTitle, setModalTitle] = useState('')
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [isCalculating, setIsCalculating] = useState(false)
   const [isExperimentCompleted, setIsExperimentCompleted] = useState(false)
 
-  const showModal = useCallback((message) => {
+  const showModal = useCallback((title, message) => {
+    setModalTitle(title)
     setModalContent(message)
     setIsModalOpen(true)
   }, [])
@@ -147,24 +149,33 @@ function AnimationBox(props: any) {
           // )
           console.log(currentStep, currentStepIndex)
           if (isValidMergeForStep(currentItem, item, currentStep)) {
-            const mergeRule = currentStep.mergeRules?.find(
-              (rule) =>
-                rule.with.substance === item.name ||
-                rule.with.apparatus === item.name
-            )
+            const mergeRule = currentStep.mergeRules?.find((rule) => {
+              return (
+                (rule.with.substance === item.name ||
+                  rule.with.apparatus === item.name) &&
+                (rule.with.substance === currentItem.name ||
+                  rule.with.apparatus === currentItem.name)
+              )
+            })
 
             console.log('Merge rule found:', mergeRule)
-            setTimeout(() => mergeItems(currentItem, item, mergeRule), 1000)
+            setTimeout(() => mergeItems(currentItem, item, mergeRule), 500)
             // mergeItems(currentItem, item)
             // Optionally, move to the next step
             if (currentStepIndex === procedureSteps.steps.length - 1) {
               setIsCalculating(false)
               setIsExperimentCompleted(true)
+              showModal(
+                `Current step: ${currentStep?.description}`,
+                `You've successfully completed the experiment. You can clear the
+                workbench to restart the experiment!`
+              )
             } else {
               setCurrentStepIndex(currentStepIndex + 1)
             }
           } else {
             showModal(
+              `Current step: ${currentStep?.description}`,
               `Cannot combine ${currentItem.name} and ${item.name}. This is not a valid next step in the experiment!`
             )
           }
@@ -346,20 +357,21 @@ function AnimationBox(props: any) {
           }}
         />
       )}
-      <SimpleModal isOpen={isModalOpen} onClose={closeModal}>
+      <SimpleModal isOpen={isModalOpen} onClose={closeModal} title={modalTitle}>
         <p>{modalContent}</p>
       </SimpleModal>
-      {isExperimentCompleted && (
+      {/* {isExperimentCompleted && (
         <SimpleModal
           isOpen={isExperimentCompleted}
-          onClose={() => setIsExperimentCompleted(false)}
+          onClose={closeModal}
+          // onClose={() => setIsExperimentCompleted(false)}
         >
           <p>
             You've successfully completed the experiment. You can clear the
             workbench to restart the experiment!
           </p>
         </SimpleModal>
-      )}
+      )} */}
     </div>
     //   <div className="w-1/4 h-full fixed">WIUNN</div>
     // </div>

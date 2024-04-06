@@ -1,12 +1,13 @@
 // SimpleModal.js
 import React from 'react'
 
-const SimpleModal = ({ isOpen, onClose, children }) => {
+const SimpleModal = ({ isOpen, onClose, children, title }) => {
   if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white p-5 rounded-lg max-w-sm w-full mx-2">
+        <h2 className="text-lg font-bold mb-2">{title}</h2>
         {children}
         <button
           onClick={onClose}
