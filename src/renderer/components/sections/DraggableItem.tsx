@@ -26,7 +26,7 @@ function DraggableItem({ item, type }: DraggableItemProps) {
       className="align-top"
       style={{ opacity: isDragging ? 0.5 : 1 }}
     >
-      <img className="w-40 h-20 text-center" src={item.image} />
+      <img className="w-32 h-20 text-center" src={item.image} />
       <p className="text-pretty text-sm truncate text-center">
         {item.name}
         {type === 'SUBSTANCE' && <TokenizeFormula formula={item.formula} />}

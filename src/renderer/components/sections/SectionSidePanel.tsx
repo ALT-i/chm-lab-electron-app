@@ -18,7 +18,9 @@ function SectionSidePanel(props: any) {
   const classInstructor = props.classInstructor
   let isPanelOpen = props.isPanelOpen
   const togglePanel = props.togglePanel
-  // console.log(substances, apparatus, classInstructor)
+  const [isShelfOpen, setIsShelfOpen] = useState(false)
+  const [isShelfMenuOpen, setIsShelfMenuOpen] = useState(false)
+  const [isIconRotated, setIsIconRotated] = useState(false)
 
   const navigate = useNavigate()
   const store = useWindowStore().about
@@ -26,16 +28,10 @@ function SectionSidePanel(props: any) {
   const userData = JSON.parse(window.localStorage.getItem('user_data'))
   const user_fname = userData?.first_name
 
-  // document.addEventListener("mousemove", function(e){
-  //     const ele = document.getElementById('element');
-  //     const distance = ele.offsetLeft + ele.offsetWidth - e.pageX;
-  //     distance < 8 && distance > -0.1 ? ele.classList.add('more-width') : ele.classList.remove('more-width');
-  // });
-
-  // const user_dp = JSON.parse(window.localStorage.getItem("dp"))  //Maybe get dp from local machine
-  // const getInsutructor = () => {
-  //     axios.post(`${server.absolute_url}/${server.}`)
-  // }
+  function toggleShelfMenu() {
+    setIsShelfMenuOpen(!isShelfMenuOpen)
+    setIsIconRotated(!isIconRotated)
+  }
 
   function goToLogin() {
     window.localStorage.removeItem('user_data')
@@ -52,8 +48,13 @@ function SectionSidePanel(props: any) {
     setTimeout(() => navigate(`/select-class`), 200)
   }
 
-  // useEffect(() => {
-  // })
+  function openApparatus() {
+    navigate('/shelf/apparatus');
+  }
+
+  function openSubstances() {
+    navigate('/shelf/substance');
+  }
 
   return (
     <section className="relative left-side-panel">
@@ -79,23 +80,6 @@ function SectionSidePanel(props: any) {
             } bg-gray-200 fixed top-0 left-0`}
           >
             <div className="flex items-center gap-4 p-4 bg-green-900">
-              {/* <img
-                src="https://docs.material-tailwind.com/img/logo-ct-dark.png"
-                alt="brand"
-                className="h-8 w-8"
-              /> */}
-              {/* <div className="row flex">
-                <img
-                  className="h-7 w-7 rounded-full"
-                  src="./noun_logo.png"
-                  alt=""
-                />
-                <img
-                  className="h-7 w-7 rounded-full"
-                  src="./acetel_logo.png"
-                  alt=""
-                />
-              </div> */}
               <Typography variant="h6" color="white" className="px-3">
                 CHM LAB v1
               </Typography>
@@ -125,23 +109,43 @@ function SectionSidePanel(props: any) {
                 <p>Hi {user_fname}</p>
               </Typography>
             </div>
-            {/* {substances? null:<div className="continue-class">
-                      <div className="continue-button">
-                          <p>Continue class</p>
-                          <span className="material-symbols-outlined">
-                              patient_list
-                          </span>
-                      </div>
-                  </div>} */}
             <div id="element" className="work">
               <div className="profile-options">
                 <div className="profile-option">
                   <div className="option" onClick={goToClassList}>
-                    <p>Class list</p>
+                    <p>Experiment list</p>
                     <span className="material-symbols-outlined data_info_alert">
                       data_info_alert
                     </span>
                   </div>
+                </div>
+                <div className="profile-option">
+                  <div className="option" onClick={toggleShelfMenu}>
+                    <p>Stockroom</p>
+                    <span
+                      className={`material-symbols-outlined expand_more ${
+                        isIconRotated ? 'rotate-180' : ''
+                      }`}
+                    >
+                      expand_more
+                    </span>
+                  </div>
+                  {isShelfMenuOpen && (
+                    <div className="submenu bg-gray-200 py-2">
+                      <div
+                        className=" profile-option option submenu-item px-5 py-1"
+                        onClick={openApparatus}
+                      >
+                        <p>Apparatus</p>
+                      </div>
+                      <div
+                        className="profile-option option submenu-item px-5 py-1"
+                        onClick={openSubstances}
+                      >
+                        <p>Substances</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="profile-option">
                   <div className="option">
