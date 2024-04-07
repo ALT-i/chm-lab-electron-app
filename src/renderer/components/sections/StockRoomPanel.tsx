@@ -68,14 +68,14 @@ function StockRoomPanel(props: any) {
         >
           <p>Substances</p>
         </AccordionHeader>
-        <AccordionBody className="pt-0 px-2 text-base font-normal">
-          <ul className="substance-list grid grid-cols-3 gap-1">
+        <AccordionBody className="pt-0 text-base font-normal">
+          <ul className="apparatus-list grid grid-cols-3 gap-1 justify-center">
             {substances &&
               substances.map((subs, index) => (
                 // <li>{subs}</li>
                 <li
                   key={index}
-                  className="max-w-20  border-dotted hover:border-solid border cursor-grab"
+                  className="border-dotted hover:border-solid border cursor-grab"
                 >
                   <DraggableItem item={subs} type="SUBSTANCE" />
                 </li>
@@ -98,13 +98,13 @@ function StockRoomPanel(props: any) {
           <i className="fa fa-cubes" aria-hidden="true"></i>
         </AccordionHeader>
         <AccordionBody className="pt-0 text-base font-normal">
-          <ul className="apparatus-list grid grid-cols-3 gap-1">
+          <ul className="apparatus-list grid grid-cols-3 gap-1 justify-center">
             {apparatus &&
               apparatus.map((tool, index) => (
                 // <li>{tool}</li>
                 <li
                   key={index}
-                  className="max-w-40 border-dotted hover:border-solid border cursor-grab"
+                  className="border-dotted hover:border-solid border cursor-grab"
                 >
                   <Tooltip content={tool.name}>
                     <DraggableItem item={tool} type="TOOL" />

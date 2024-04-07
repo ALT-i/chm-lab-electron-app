@@ -23,11 +23,16 @@ function DraggableItem({ item, type }: DraggableItemProps) {
   return (
     <div
       ref={dragRef}
-      className="align-top"
+      className="align-top text-center"
       style={{ opacity: isDragging ? 0.5 : 1 }}
     >
-      <img className="w-32 h-20 text-center" src={item.image} />
-      <p className="text-pretty text-sm truncate text-center">
+      <img
+        className="w-32 h-32 py-3 px-3"
+        style={{ display: 'block', margin: '0 auto' }}
+        src={item.image}
+        alt={item.name}
+      />
+      <p className="text-pretty text-sm truncate ">
         {item.name}
         {type === 'SUBSTANCE' && <TokenizeFormula formula={item.formula} />}
       </p>
