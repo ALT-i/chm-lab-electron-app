@@ -76,7 +76,7 @@ function ShelfPage(props: any) {
   }
 
   const goBack = () => {
-    navigate(-1) // Go back to the previous page
+    navigate('/home') // Go back to the previous page
   }
 
   const isPanelOpen = props.isPanelOpen
@@ -163,12 +163,12 @@ function ShelfPage(props: any) {
                 </div>
               </div>
               <div className="mx-16 my-10">
-                <div className="grid grid-cols-6 gap-4 justify-center">
+                <ul className="grid grid-cols-6 gap-4 justify-center">
                   {Array.isArray(shelfItems) &&
                     shelfItems.map((item, index) => (
-                      <div
+                      <li
                         key={index}
-                        className="col-span-1 text-center border-solid border cursor-pointer  hover:bg-green-100"
+                        className="col-span-1 text-center border-dotted hover:border-dashed border cursor-pointer  hover:bg-green-100 p-8 shadow-md hover:shadow-xl"
                         onClick={() => handleItemClick(item)}
                       >
                         <img
@@ -183,9 +183,9 @@ function ShelfPage(props: any) {
                             <TokenizeFormula formula={item.formula} />
                           )}
                         </p>
-                      </div>
+                      </li>
                     ))}
-                </div>
+                </ul>
               </div>
             </div>
           </div>

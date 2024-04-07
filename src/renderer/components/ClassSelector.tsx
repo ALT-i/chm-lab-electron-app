@@ -110,7 +110,7 @@ const ClassSelector = (props: any) => {
         </Typography>
       </div>
       <div className="selector-header">
-        <h1>Pick a class</h1>
+        <h1>Pick an experiment to simulate</h1>
       </div>
       <div className="class-selection-grid">
         <DisplayClasses getClassDetails={getClassDetails} />

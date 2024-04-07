@@ -49,11 +49,11 @@ function SectionSidePanel(props: any) {
   }
 
   function openApparatus() {
-    navigate('/shelf/apparatus');
+    navigate('/shelf/apparatus')
   }
 
   function openSubstances() {
-    navigate('/shelf/substance');
+    navigate('/shelf/substance')
   }
 
   return (
@@ -121,25 +121,29 @@ function SectionSidePanel(props: any) {
                 </div>
                 <div className="profile-option">
                   <div className="option" onClick={toggleShelfMenu}>
+                    {/* Icon on the left */}
                     <p>Stockroom</p>
-                    <span
+                    <span className="material-symbols-outlined inventory py-4 px-3">
+                      inventory
+                    </span>
+                    {/* <span
                       className={`material-symbols-outlined expand_more ${
                         isIconRotated ? 'rotate-180' : ''
                       }`}
                     >
                       expand_more
-                    </span>
+                    </span> */}
                   </div>
                   {isShelfMenuOpen && (
-                    <div className="submenu bg-gray-200 py-2">
+                    <div className="submenu bg-gray-200 py-3 px-6">
                       <div
-                        className=" profile-option option submenu-item px-5 py-1"
+                        className="option submenu-item hover:bg-green-200"
                         onClick={openApparatus}
                       >
                         <p>Apparatus</p>
                       </div>
                       <div
-                        className="profile-option option submenu-item px-5 py-1"
+                        className="option submenu-item hover:bg-green-200"
                         onClick={openSubstances}
                       >
                         <p>Substances</p>
