@@ -224,9 +224,10 @@ function IndexPage(props: any) {
                       <source src={classVideo} type="video/mp4" />
                       Error fetching demo video.
                     </video>
-                    <p
+                    <div
+                      className="!list-decimal"
                       dangerouslySetInnerHTML={{ __html: classInstruction }}
-                    ></p>
+                    ></div>
                   </div>
                 </div>
                 {/* </div> */}

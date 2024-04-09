@@ -14,7 +14,7 @@
   padding: 0;
   outline: 0;
   border: 0;
-  list-style: none;
+  /* list-style: none; */
   text-decoration: none;
   box-sizing: border-box;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
@@ -1217,8 +1217,7 @@ html body header .header-section .topbar-icons .icon-flex .icon-flex-close:hover
   letter-spacing: 1px;
 }
 .index-page .index-page-main #workspaceLesson.workspace-lesson .lesson-section .lesson-instruction {
-  margin: 2em 0.7em;
-  margin-bottom: 5em;
+  margin: 2em 1.4rem;
 }
 .index-page .index-page-main #workspaceLesson.workspace-lesson .lesson-section .lesson-instruction p {
   font-size: 1em;
