@@ -27,14 +27,16 @@ function AnimationBox(props: any) {
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalContent, setModalContent] = useState('')
+  const [modalContent2, setModalContent2] = useState('')
   const [modalTitle, setModalTitle] = useState('')
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [isCalculating, setIsCalculating] = useState(false)
   const [isExperimentCompleted, setIsExperimentCompleted] = useState(false)
 
-  const showModal = useCallback((title, message) => {
+  const showModal = useCallback((title, message1, message2 = '') => {
     setModalTitle(title)
-    setModalContent(message)
+    setModalContent(message1)
+    setModalContent2(message2)
     setIsModalOpen(true)
   }, [])
 
@@ -166,7 +168,7 @@ function AnimationBox(props: any) {
               setIsCalculating(false)
               setIsExperimentCompleted(true)
               showModal(
-                `Current step: ${currentStep?.description}`,
+                `Experiment Complete!`,
                 `You've successfully completed the experiment. You can clear the
                 workbench to restart the experiment!`
               )
@@ -175,8 +177,9 @@ function AnimationBox(props: any) {
             }
           } else {
             showModal(
-              `Current step: ${currentStep?.description}`,
-              `Cannot combine ${currentItem.name} and ${item.name}. This is not a valid next step in the experiment!`
+              `Invalid Next Step!`,
+              `${currentStep?.description}`,
+              `Cannot combine ${currentItem.name} and ${item.name}. This is not a valid next step in the experiment!`,
             )
           }
         } else {
@@ -357,9 +360,13 @@ function AnimationBox(props: any) {
           }}
         />
       )}
-      <SimpleModal isOpen={isModalOpen} onClose={closeModal} title={modalTitle}>
-        <p>{modalContent}</p>
-      </SimpleModal>
+      <SimpleModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title={modalTitle}
+        nextStep={modalContent}
+        warning={modalContent2}
+      />
       {/* {isExperimentCompleted && (
         <SimpleModal
           isOpen={isExperimentCompleted}

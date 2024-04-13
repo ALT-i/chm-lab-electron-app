@@ -148,7 +148,7 @@ function ShelfPage(props: any) {
         </div>
         {chosenShelf ? (
           <div id="workspaceLesson" className="workspace-lesson">
-            <div className="lesson-section">
+            <div className="lesson-section mb-40">
               <div className="lesson-title">
                 <div className="flex">
                   <button
