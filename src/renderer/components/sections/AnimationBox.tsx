@@ -48,10 +48,16 @@ function AnimationBox(props: any) {
     accept: ['SUBSTANCE', 'TOOL'], // Accept both substances and tools
     drop: (item: Item, monitor) => {
       console.log('Dropped item:', item)
+      const boxRect = document
+        .querySelector('.animation-box')
+        ?.getBoundingClientRect()
+      if (!boxRect) return // Return early if boxRect is null
+      const centerX = boxRect.width / 2 - item?.width / 2
+      const centerY = boxRect.height / 2 - item?.height / 2
       const delta = monitor.getClientOffset()
       const initialPosition = delta
         ? { x: delta.x, y: delta.y }
-        : { x: 0, y: 0 }
+        : { x: centerX, y: centerY }
       // Check if the item being dropped already exists based on ID
       if (!droppedItems.some((droppedItem) => droppedItem.id === item.id)) {
         setDroppedItems((currentItems) => [
@@ -344,7 +350,7 @@ function AnimationBox(props: any) {
           ❌<p className="text-xs">Reset Workbench</p>
         </button>
       </div>
-      {contextMenu.visible && (
+      {/* {contextMenu.visible && (
         <ContextMenu
           x={contextMenu.x}
           y={contextMenu.y}
@@ -359,7 +365,7 @@ function AnimationBox(props: any) {
             setContextMenu({ ...contextMenu, visible: false }) // Hide context menu
           }}
         />
-      )}
+      )} */}
       <SimpleModal
         isOpen={isModalOpen}
         onClose={closeModal}
