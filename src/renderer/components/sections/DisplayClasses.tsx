@@ -9,6 +9,7 @@ function DisplayClasses(props: any) {
   const getClassDetails = props.getClassDetails
   const [classes, setClasses] = useState(null)
   const [userData, setUserData] = useState(null)
+  const [sortAscending, setSortAscending] = useState(true) // Added state for sorting order
   const navigate = useNavigate()
 
   function getClasses() {
@@ -32,31 +33,41 @@ function DisplayClasses(props: any) {
         }
       })
   }
-  function getUser() {
-    // axios.get(`${server.absolute_url}/${server.user}/${userData.id}/`, {
-    //     headers: {
-    //         "Content-Type": "application/json",
-    //         // "authorization": token
-    //     }
-    // }).then((res) => {
-    //     setUserData(res.data)
-    //     window.localStorage.setItem("user_data", JSON.stringify(res.data))
-    // }).catch(err => {
-    //     if(err.message === "Network Error") {
-    //         console.log(err);
-    //     }
-    // })
+
+  function sortClasses() {
+    // Added sorting function
+    if (classes) {
+      const sortedClasses = [...classes].sort((a, b) => {
+        const titleA = a.id // ignore upper and lowercase
+        const titleB = b.id // ignore upper and lowercase
+        if (titleA < titleB) {
+          return sortAscending ? -1 : 1
+        }
+        if (titleA > titleB) {
+          return sortAscending ? 1 : -1
+        }
+        return 0
+      })
+      setClasses(sortedClasses)
+      setSortAscending(!sortAscending) // toggle the sort order for next click
+    }
   }
 
   useEffect(() => {
     setClasses(JSON.parse(window.localStorage.getItem('classes')))
-    // setUserData(JSON.parse(window.localStorage.getItem("user_data")));
     getClasses()
-    // getUser();
   }, [])
 
   return (
     <div>
+      <div style={{ textAlign: 'right' }}>
+        <button
+          onClick={sortClasses}
+          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+        >
+          <span className="material-symbols-outlined">sort</span>
+        </button>
+      </div>
       <ul>
         {classes &&
           classes.map((topic) => (
@@ -72,6 +83,18 @@ function DisplayClasses(props: any) {
               }}
               className="!p-14 !text-center"
             >
+              <img
+                src={'./chem_views.svg'} // topic.image
+                alt={topic.title}
+                height={100}
+                width={100}
+                style={{
+                  maxWidth: '100%',
+                  display: 'block',
+                  marginLeft: 'auto',
+                  marginRight: 'auto',
+                }}
+              />
               {topic.title}
             </li>
           ))}
