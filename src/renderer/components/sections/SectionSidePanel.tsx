@@ -81,7 +81,7 @@ function SectionSidePanel(props: any) {
           >
             <div className="flex items-center gap-4 p-4 bg-green-900">
               <Typography variant="h6" color="white" className="px-3">
-                CHM LAB v1
+                Virtual Chemistry Lab
               </Typography>
               <IconButton
                 variant="text"

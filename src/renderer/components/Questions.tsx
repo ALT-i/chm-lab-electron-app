@@ -19,7 +19,7 @@ const Questions = () => {
     const navigate = useNavigate();
 
     // const ipcRenderer = window.ipcRenderer;
-    
+
     // const storeData = (signal, reciever, data) => {             // Maybe make this a separate component
     //     ipcRenderer.send(signal, (JSON.stringify(data)));
     //     ipcRenderer.on(reciever, (statement) => {
@@ -54,13 +54,13 @@ const Questions = () => {
     //         })
     //     .catch((err) => {
     //         console.log(err.message);
-    //         if (err.message.includes("Unauthorized")) 
+    //         if (err.message.includes("Unauthorized"))
     //         navigate('/')
     //     });
 
     // }
 
-    // function getAllQuestions () { 
+    // function getAllQuestions () {
 
     //     fetch(server.absolute_url + '/questions',{
     //         headers: {
@@ -75,7 +75,7 @@ const Questions = () => {
     //     })
     //     .catch((err) => {
     //         console.log(err.message);
-    //         if (err.message.includes("Unauthorized")) 
+    //         if (err.message.includes("Unauthorized"))
     //         navigate('/')
     //     });
     // }
@@ -93,8 +93,8 @@ const Questions = () => {
     //     }
     // }
 
-    
-    
+
+
     // useEffect(() => {
 
     //     getAllCategories();
@@ -129,7 +129,7 @@ const Questions = () => {
     //     })
     //     .catch((err) => {
     //         console.log(err.message);
-    //         if (err.message.includes("Unauthorized")) 
+    //         if (err.message.includes("Unauthorized"))
     //         navigate('/')
     //     });
     // }
@@ -138,8 +138,8 @@ const Questions = () => {
         document.getElementById(`arrhead-${id}`).classList.toggle("active")
         document.getElementById(`compartment-${id}`).classList.toggle("active")
     }
- 
-    
+
+
     // const endSession = () => {
     //     let token
     //     const tokenData = JSON.parse(window.localStorage.getItem("tokens"))
@@ -151,7 +151,7 @@ const Questions = () => {
 
     //     let payload = tokenData.access.split('.')[1];
     //     payload = JSON.parse(window.atob(payload))
-        
+
     //     axios.post(`${server.absolute_url}/sign-out`,
     //         {},
     //         {
@@ -165,10 +165,10 @@ const Questions = () => {
     //     window.localStorage.removeItem("tokens")
     // }
 
-    
 
 
-    return ( 
+
+    return (
         <div className="">
             <div className="side-panel">
                 <div className="category-view">
@@ -299,5 +299,5 @@ const Questions = () => {
         </div>
     );
 }
- 
+
 export default Questions;

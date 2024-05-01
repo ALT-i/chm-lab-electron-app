@@ -28,27 +28,27 @@ const ClassSelector = (props: any) => {
     console.log(e.target.id)
     addCompletedClass(e.target.id)
     const user_info = JSON.parse(window.localStorage.getItem('user_data'))
-    axios
-      .patch(
-        `${server.absolute_url}/${server.user}/${user_info.id}/`,
-        {
-          progress: `${hashedClasses}`,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            // "authorization": token
-          },
-        }
-      )
-      .then((res) => {
-        console.log(res.data)
-      })
-      .catch((err) => {
-        if (err.message === 'Network Error') {
-          console.log(err)
-        }
-      })
+    // axios
+    //   .patch(
+    //     `${server.absolute_url}/${server.user}/${user_info.id}/`,
+    //     {
+    //       progress: `${hashedClasses}`,
+    //     },
+    //     {
+    //       headers: {
+    //         'Content-Type': 'application/json',
+    //         // "authorization": token
+    //       },
+    //     }
+    //   )
+    //   .then((res) => {
+    //     console.log(res.data)
+    //   })
+    //   .catch((err) => {
+    //     if (err.message === 'Network Error') {
+    //       console.log(err)
+    //     }
+    //   })
 
     navigate(`/home/${e.target.id}`)
   }

@@ -11,15 +11,15 @@ function IndexHeader() {
       {/* <div>
         <h3>Powered by ALT-I</h3>
       </div> */}
-      <footer className="flex w-full flex-row flex-wrap items-center justify-center gap-y-6 gap-x-12 border-t border-blue-gray-50 py-6 text-center md:justify-between">
-        <Typography
+      <footer className="flex w-full flex-row flex-wrap items-center justify-center gap-y-6 gap-x-12 border-t border-blue-gray-50 text-center md:justify-between">
+        {/* <Typography
           color="lime"
           className="font-normal flex w-full justify-center items-center text-sm"
           placeholder={''}
           variant="h6"
         >
           Developed by ALT-I
-        </Typography>
+        </Typography> */}
       </footer>
     </div>
   )

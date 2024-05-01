@@ -1238,8 +1238,15 @@ html body header .header-section .topbar-icons .icon-flex .icon-flex-close:hover
   border-radius: 0.5em;
   box-shadow: inset 3px 8px 16px rgba(199, 197, 197, 0.9294117647);
   background: rgba(216, 234, 220, 0.5333333333);
-  background-size: 20px 20px;
-  background-image: radial-gradient(circle, #000000 1px, rgba(0, 0, 0, 0) 1px);
+  /* set opacity of background to 0.5 and center background image */
+  background-image:
+  radial-gradient(circle, #000000 1px, rgba(0, 0, 0, 0) 1px),
+  url('../../resources/public/labbench_bg.svg');
+  background-repeat: no-repeat;
+  background-size: 30rem;
+  background-clip: border-box;
+  background-blend-mode:lighten;
+  background-position: bottom center;
   justify-content: center;
   align-items: center;
 }
@@ -1375,7 +1382,7 @@ html body header .header-section .topbar-icons .icon-flex .icon-flex-close:hover
   border-radius: 50%;
   width: 6em;
   height: 6em;
-  border: 2px solid #8e9681;
+  /* border: 2px solid #3f3f3f; */
   padding: 0.5em;
 }
 

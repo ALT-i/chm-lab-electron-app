@@ -6,7 +6,7 @@ import server from "../utils";
 import DisplayLevels from "./sections/DisplayLevels";
 
 function DifficultySelector () {
-    
+
     const navigate = useNavigate()
 
     const getLeveldetails = (e: any) => {
@@ -17,7 +17,7 @@ function DifficultySelector () {
     }
 
 
-    return ( 
+    return (
         <div className="display-difficulty-selector">
             <div className="paragraph">
                 <h2>Select your level of difficulty</h2>
@@ -28,5 +28,5 @@ function DifficultySelector () {
         </div>
      );
 }
- 
+
 export default DifficultySelector;
