@@ -47,7 +47,7 @@ function StockRoomPanel(props: any) {
   const apparatus = props.tools
 
   return (
-    <div className="w-1/4 px-2 py-3 mx-2 my-7 overflow-auto bg-gray-300 rounded-lg shadow-inner">
+    <div className="w-1/5 basis-1/5 px-2 py-3 mx-2 my-7 overflow-auto bg-gray-300 rounded-lg shadow-inner">
       <Typography
         variant="h4"
         color="green"

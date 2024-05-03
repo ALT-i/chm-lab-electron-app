@@ -13,7 +13,7 @@ interface Item {
 }
 
 function AnimationBox(props: any) {
-  const procedureSteps = props.procedure
+  const { procedure: procedureSteps, panel } = props
   // console.log(procedureSteps)
   const [contextMenu, setContextMenu] = useState({
     visible: false,
@@ -32,6 +32,23 @@ function AnimationBox(props: any) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [isCalculating, setIsCalculating] = useState(false)
   const [isExperimentCompleted, setIsExperimentCompleted] = useState(false)
+
+  const backgroundImages = [
+    'url("./real_chemLab_bg.jpg")',
+    'url("./real_chemLab_bg2.jpg")',
+    'url("./real_chemLab_bg3.jpg")',
+  ]
+  const svgOverlay = 'url("./labbench_bg.svg")' // Path to your SVG overlay
+
+  // State to hold the selected background image
+  const [randomBackgroundImage, setRandomBackgroundImage] = useState('')
+
+  useEffect(() => {
+    // Select a random background image when the component mounts
+    const selectedImage =
+      backgroundImages[Math.floor(Math.random() * backgroundImages.length)]
+    setRandomBackgroundImage(`${svgOverlay}, ${selectedImage}`)
+  }, []) // Empty dependency array ensures this effect runs only once
 
   const showModal = useCallback((title, message1, message2 = '') => {
     setModalTitle(title)
@@ -172,10 +189,11 @@ function AnimationBox(props: any) {
             // Optionally, move to the next step
             if (currentStepIndex === procedureSteps.steps.length - 1) {
               setIsCalculating(false)
+              setCurrentStepIndex(currentStepIndex + 1)
               setIsExperimentCompleted(true)
               showModal(
                 `Experiment Complete!`,
-                `You've successfully completed the experiment. You can clear the
+                `You've successfully completed the experiment and have achieved the final result of ${item?.name}. You can clear the
                 workbench to restart the experiment!`
               )
             } else {
@@ -185,7 +203,7 @@ function AnimationBox(props: any) {
             showModal(
               `Invalid Next Step!`,
               `${currentStep?.description}`,
-              `Cannot combine ${currentItem.name} and ${item.name}. This is not a valid next step in the experiment!`,
+              `Cannot combine ${currentItem?.name} and ${item?.name}. This is not a valid next step in the experiment!`
             )
           }
         } else {
@@ -265,16 +283,55 @@ function AnimationBox(props: any) {
   return (
     <div
       ref={dropRef}
-      className="w-3/4 animation-box !ml-0 !mr-2 relative flex justify-center items-center overflow-hidden"
+      className={`animation-box  ${
+        panel ? 'w-3/5 basis-3/5' : 'w-4/5 basis-4/5'
+      } !ml-2 !mr-2 flex`}
       style={{
         position: 'relative',
         overflow: 'hidden',
-        // height: '32em',
       }}
     >
+      {/* Pseudo-element for background with opacity */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundImage: randomBackgroundImage,
+          backgroundPosition: 'bottom center',
+          backgroundSize: '30rem, cover',
+          backgroundRepeat: 'no-repeat, no-repeat',
+          opacity: 0.5, // Only the background is transparent
+          zIndex: -1, // Ensure it's under all other content
+        }}
+      ></div>
+      {/* Steps Card */}
+      <div
+        className="absolute top-2 left-2 bg-white p-4 border rounded shadow-lg"
+        style={{ maxHeight: '80%', overflowY: 'auto', width: '25%' }}
+      >
+        <h4 className="font-bold text-lg mb-2">Experiment Steps</h4>
+        <ul>
+          {procedureSteps?.steps?.map((step, index) => (
+            <li
+              key={index}
+              className={`p-2 rounded-sm ${
+                currentStepIndex > index
+                  ? 'text-green-500 shadow-inner line-through italic'
+                  : 'shadow-md'
+              }`}
+            >
+              {currentStepIndex > index ? '✔️ ' : '🔘'}
+              {step?.description}
+            </li>
+          ))}
+        </ul>
+      </div>
       {/* loader */}
       {isCalculating && (
-        <div className="absolute z-10 flex justify-center items-center w-full h-full bg-black bg-opacity-50">
+        <div className="absolute z-10 flex justify-center items-center w-full h-full">
           <img
             src="./loading.gif"
             alt="Loading Animation"
@@ -355,7 +412,7 @@ function AnimationBox(props: any) {
           x={contextMenu.x}
           y={contextMenu.y}
           itemX={contextMenu.currentItem.position.x}
-          itemY={contextMenu.currentItem.position.y}
+          itemY={contextMenu.currentItem.position.y
           onRemove={() => {
             setDroppedItems(
               droppedItems.filter(

@@ -84,7 +84,13 @@ function DisplayClasses(props: any) {
               className="!p-14 !text-center"
             >
               <img
-                src={'./chem_views.svg'} // topic.image
+                // if topic.image is not null or ends with default.png, use it, else use ./chem_views.svg
+                // src={topic.image ? topic.image : './chem_views.svg'} // topic.image
+                src={
+                  topic.image && !topic.image.endsWith('default.png')
+                    ? topic.image
+                    : './chem_views.svg'
+                }
                 alt={topic.title}
                 height={100}
                 width={100}

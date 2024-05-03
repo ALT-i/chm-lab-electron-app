@@ -1,20 +1,14 @@
-import React, { useRef } from 'react'
-import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
-import { useNavigate } from 'react-router-dom'
+import React, { useRef, useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import {
-  Drawer,
-  Button,
-  Typography,
-  IconButton,
-} from '@material-tailwind/react'
+import { Typography, IconButton, Button } from '@material-tailwind/react'
 
 import server from '../utils'
 import SectionSidePanel from './sections/SectionSidePanel'
 import ProgressChartDisplay from './sections/ProgressChartDisplay'
 import AnimationBox from './sections/AnimationBox'
 import StockRoomPanel from './sections/StockRoomPanel'
+import InstructionsPanel from './sections/InstructionsPanel'
 
 function IndexPage(props: any) {
   const navigate = useNavigate()
@@ -30,6 +24,11 @@ function IndexPage(props: any) {
   const [classVideo, setClassVideo] = useState(null)
   const [isTooltipOpen, setIsTooltipOpen] = useState(false)
   const [drawerState, setOpenDrawer] = React.useState(false)
+  const [drawerVisible, setDrawerVisible] = useState(true)
+
+  const togglePanel = () => {
+    setDrawerVisible(!drawerVisible)
+  }
 
   const openDrawer = () => setOpenDrawer(true)
   const closeDrawer = () => setOpenDrawer(false)
@@ -152,90 +151,24 @@ function IndexPage(props: any) {
                   </button>
                   <h3>{classTitle}</h3>
                 </div>
-                <p>
-                  <button
-                    className=" text-xl text-gray-800 font-normal px-4 my-2 rounded-full border shadow-lg"
-                    onClick={openDrawer}
-                    title="Toggle Sidebar"
-                  >
-                    Instructions
-                  </button>
-                </p>
-
+                {!drawerVisible && (
+                  <p>
+                    <button
+                      className=" text-xl text-gray-800 font-normal px-4 my-2 rounded-full border shadow-lg"
+                      onClick={() => setDrawerVisible(!drawerVisible)}
+                      title="Toggle Sidebar"
+                    >
+                      Instructions
+                    </button>
+                  </p>
+                )}
                 {/* <h3 className='float-right'>Instructor: {classInstructor}</h3> */}
                 {/* <p>Parameters: {classParameters}</p> */}
               </div>
-              <Drawer
-                size={500}
-                placement="right"
-                open={drawerState}
-                onClose={closeDrawer}
-                className="p-4 scrollbar scrollbar-thumb-rounded"
-              >
-                {/* <div //intrsuction panel
-                  className={`panel ${
-                    isTooltipOpen ? 'block' : 'hidden'
-                  } bg-gray-200 z-30 w-96 h-screen fixed top-0 right-0 transition-all duration-300 ease-in-out transform
-                py-16 overflow-auto ${
-                  isTooltipOpen ? 'translate-x-0' : 'translate-x-full'
-                }`}
-                > */}
-                <div className=" h-full overflow-auto">
-                  <Typography variant="h5" color="green" textGradient>
-                    {classTitle}
-                  </Typography>
-                  <Typography variant="paragraph" color="blue-gray">
-                    Instructor: {classInstructor}
-                  </Typography>
-
-                  <div className="mb-6 flex items-center justify-between">
-                    <Typography variant="h6" color="blue-gray">
-                      Instructions
-                    </Typography>
-                    <IconButton
-                      variant="text"
-                      color="blue-gray"
-                      onClick={closeDrawer}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                        stroke="currentColor"
-                        className="h-5 w-5"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </IconButton>
-                  </div>
-                  <div className="lesson-instruction">
-                    <video
-                      className="h-full w-full mb-5 rounded-lg"
-                      controls
-                      autoPlay
-                      muted
-                      key={classVideo}
-                    >
-                      <source src={classVideo} type="video/mp4" />
-                      Error fetching demo video.
-                    </video>
-                    <div
-                      className="!list-decimal"
-                      dangerouslySetInnerHTML={{ __html: classInstruction }}
-                    ></div>
-                  </div>
-                </div>
-                {/* </div> */}
-              </Drawer>
               <div
-                className="flex"
+                className="flex flex-row"
                 style={{
-                  height: '75vh',
+                  height: drawerVisible ? '80vh' : '75vh',
                 }}
               >
                 <StockRoomPanel
@@ -243,7 +176,18 @@ function IndexPage(props: any) {
                   tools={tools}
                   classInstructor={classInstructor}
                 />
-                <AnimationBox procedure={classProcedure} />
+                <AnimationBox
+                  procedure={classProcedure}
+                  panel={drawerVisible}
+                />
+                <InstructionsPanel
+                  isOpen={drawerVisible}
+                  closeDrawer={togglePanel}
+                  classTitle={classTitle}
+                  classInstructor={classInstructor}
+                  classVideo={classVideo}
+                  classInstruction={classInstruction}
+                />
               </div>
             </div>
           </div>

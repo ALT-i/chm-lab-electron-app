@@ -1239,14 +1239,6 @@ html body header .header-section .topbar-icons .icon-flex .icon-flex-close:hover
   box-shadow: inset 3px 8px 16px rgba(199, 197, 197, 0.9294117647);
   background: rgba(216, 234, 220, 0.5333333333);
   /* set opacity of background to 0.5 and center background image */
-  background-image:
-  radial-gradient(circle, #000000 1px, rgba(0, 0, 0, 0) 1px),
-  url('../../resources/public/labbench_bg.svg');
-  background-repeat: no-repeat;
-  background-size: 30rem;
-  background-clip: border-box;
-  background-blend-mode:lighten;
-  background-position: bottom center;
   justify-content: center;
   align-items: center;
 }
@@ -1419,6 +1411,22 @@ html body header .header-section .topbar-icons .icon-flex .icon-flex-close:hover
   margin-left: auto;
   margin-right: auto;
   text-align: center;
+}
+
+.instructions-drawer {
+  /* position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 300px;
+  background: white;
+  box-shadow: -2px 0 8px rgba(0,0,0,0.1); */
+  transform: translateX(100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+.instructions-drawer.open {
+  transform: translateX(0);
 }
 
 /*# sourceMappingURL=main.css.map */

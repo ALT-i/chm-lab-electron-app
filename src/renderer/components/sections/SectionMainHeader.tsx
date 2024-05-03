@@ -13,16 +13,12 @@ function SectionMainHeader() {
   return (
     <div className="main-header">
       <div className="flex items-center justify-center mb-20">
-        <img
-          className="img-circle !w-80 !h-80 !p-0"
-          src="./noun_logo.png"
-          alt=""
-        />
-        <img
+        <img className=" h-80 p-0" src="./noun_acetel_logo.png" alt="" />
+        {/* <img
           className="img-circle !w-72 !h-72"
           src="./acetel_logo.png"
           alt=""
-        />
+        /> */}
       </div>
       <div className="">
         <Typography
