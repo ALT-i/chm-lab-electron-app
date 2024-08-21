@@ -32,7 +32,7 @@ function InstructionsPanel(props: any) {
         <Typography variant="h5" color="green" textGradient>
           Instructions
         </Typography>
-        <IconButton variant="text" color="blue-gray" onClick={closeDrawer}>
+        {/* <IconButton variant="text" color="blue-gray" onClick={closeDrawer}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -47,7 +47,7 @@ function InstructionsPanel(props: any) {
               d="M6 18L18 6M6 6l12 12"
             />
           </svg>
-        </IconButton>
+        </IconButton> */}
         {/* <Typography variant="h5" color="green" textGradient>
         {classTitle}
       </Typography>

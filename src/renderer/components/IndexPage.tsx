@@ -149,20 +149,27 @@ function IndexPage(props: any) {
                   >
                     &#10094;
                   </button>
-                  <h3>{classTitle}</h3>
+                  <div className="ml-5 px-2">
+                    <Typography variant="h3" color="green" textGradient>
+                      {classTitle}
+                    </Typography>
+                    <Typography variant="paragraph" color="blue-gray">
+                      Instructor: {classInstructor}
+                    </Typography>
+                  </div>
+                  {!drawerVisible && (
+                    <p>
+                      <button
+                        className="text-lg bg-green-500 hover:bg-white  font-normal px-4 my-1 rounded-lg border shadow-lg"
+                        onClick={() => setDrawerVisible(!drawerVisible)}
+                        title="Toggle Sidebar"
+                      >
+                        Instructions
+                      </button>
+                    </p>
+                  )}
                 </div>
-                {!drawerVisible && (
-                  <p>
-                    <button
-                      className=" text-xl text-gray-800 font-normal px-4 my-2 rounded-full border shadow-lg"
-                      onClick={() => setDrawerVisible(!drawerVisible)}
-                      title="Toggle Sidebar"
-                    >
-                      Instructions
-                    </button>
-                  </p>
-                )}
-                {/* <h3 className='float-right'>Instructor: {classInstructor}</h3> */}
+                {/* <h3 className="float-right">Instructor: {classInstructor}</h3> */}
                 {/* <p>Parameters: {classParameters}</p> */}
               </div>
               <div
