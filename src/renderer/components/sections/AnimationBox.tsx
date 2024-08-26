@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useDrop } from 'react-dnd'
 import TokenizeFormula from '../Formula'
 import ContextMenu from '../ContextMenu'
@@ -19,7 +19,8 @@ function AnimationBox(props: any) {
     y: 0,
     currentItem: null,
   })
-  const [droppedItems, setDroppedItems] = useState<Item[]>([])
+  const [droppedItems, setDroppedItems] = useState([])
+  const droppedItemsRef = useRef(droppedItems)
   const [dragging, setDragging] = useState(false)
   const [currentItem, setCurrentItem] = useState<Item | null>(null)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
@@ -46,6 +47,10 @@ function AnimationBox(props: any) {
     setRandomBackgroundImage(`${svgOverlay}, ${selectedImage}`)
   }, [])
 
+  useEffect(() => {
+    droppedItemsRef.current = droppedItems
+  }, [droppedItems])
+
   const showModal = useCallback((title, message1, message2 = '') => {
     setModalTitle(title)
     setModalContent(message1)
@@ -60,23 +65,42 @@ function AnimationBox(props: any) {
   const [, dropRef] = useDrop(() => ({
     accept: ['SUBSTANCE', 'TOOL'],
     drop: (item: Item, monitor) => {
-      console.log('Dropped item:', item)
       const boxRect = document
         .querySelector('.animation-box')
         ?.getBoundingClientRect()
       if (!boxRect) return
 
       const delta = monitor.getClientOffset()
-      const initialPosition = delta ? { x: delta.x, y: delta.y } : { x: 0, y: 0 }
+      const initialPosition = delta
+        ? { x: delta.x, y: delta.y }
+        : { x: 0, y: 0 }
 
       let newX
-      const centerY = initialPosition.y
+      const minY = 50 // Set your minimum Y value here
+      const maxY = boxRect.height - 250 // Assuming item height is 100px
+      let centerY = initialPosition.y
 
-      if (droppedItems.length === 0) {
+      if (centerY < minY) {
+        centerY = minY
+      } else if (centerY > maxY) {
+        centerY = maxY
+      }
+
+      if (droppedItemsRef.current.length === 0) {
         newX = boxRect.width / 2 - 50 // Assuming item width is 100px
       } else {
-        const lastItem = droppedItems[droppedItems.length - 1]
+        const lastItem =
+          droppedItemsRef.current[droppedItemsRef.current.length - 1]
         newX = lastItem.position.x + 110 // 100px item width + 10px gap
+      }
+
+      // Ensure newX is within the bounds of the AnimationBox
+      const minX = 0
+      const maxX = boxRect.width - 100 // Assuming item width is 100px
+      if (newX < minX) {
+        newX = minX
+      } else if (newX > maxX) {
+        newX = maxX
       }
 
       const newItem = {
@@ -84,7 +108,15 @@ function AnimationBox(props: any) {
         position: { x: newX, y: centerY },
       }
 
-      setDroppedItems((currentItems) => [...currentItems, newItem])
+      console.log('Dropped item:', newItem)
+
+      // setDroppedItems((currentItems) => [...currentItems, newItem])
+      // Use a callback to log the updated state
+      setDroppedItems((currentItems: DroppedItem[]) => {
+        const updatedItems = [...currentItems, newItem]
+        console.log('Updated dropped items:', updatedItems)
+        return updatedItems
+      })
     },
   }))
 
