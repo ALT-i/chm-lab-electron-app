@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect } from 'react'
-import { useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useDrop } from 'react-dnd'
 import TokenizeFormula from '../Formula'
 import ContextMenu from '../ContextMenu'
@@ -14,16 +13,15 @@ interface Item {
 
 function AnimationBox(props: any) {
   const { procedure: procedureSteps, panel } = props
-  // console.log(procedureSteps)
   const [contextMenu, setContextMenu] = useState({
     visible: false,
     x: 0,
     y: 0,
     currentItem: null,
   })
-  const [droppedItems, setDroppedItems] = useState([])
+  const [droppedItems, setDroppedItems] = useState<Item[]>([])
   const [dragging, setDragging] = useState(false)
-  const [currentItem, setCurrentItem] = useState(null)
+  const [currentItem, setCurrentItem] = useState<Item | null>(null)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalContent, setModalContent] = useState('')
@@ -40,15 +38,13 @@ function AnimationBox(props: any) {
   ]
   const svgOverlay = 'url("./labbench_bg.svg")' // Path to your SVG overlay
 
-  // State to hold the selected background image
   const [randomBackgroundImage, setRandomBackgroundImage] = useState('')
 
   useEffect(() => {
-    // Select a random background image when the component mounts
     const selectedImage =
       backgroundImages[Math.floor(Math.random() * backgroundImages.length)]
     setRandomBackgroundImage(`${svgOverlay}, ${selectedImage}`)
-  }, []) // Empty dependency array ensures this effect runs only once
+  }, [])
 
   const showModal = useCallback((title, message1, message2 = '') => {
     setModalTitle(title)
@@ -62,37 +58,43 @@ function AnimationBox(props: any) {
   }, [])
 
   const [, dropRef] = useDrop(() => ({
-    accept: ['SUBSTANCE', 'TOOL'], // Accept both substances and tools
+    accept: ['SUBSTANCE', 'TOOL'],
     drop: (item: Item, monitor) => {
       console.log('Dropped item:', item)
       const boxRect = document
         .querySelector('.animation-box')
         ?.getBoundingClientRect()
-      if (!boxRect) return // Return early if boxRect is null
-      const centerX = boxRect.width / 2 - item?.width / 2
-      const centerY = boxRect.height / 2 - item?.height / 2
+      if (!boxRect) return
+
       const delta = monitor.getClientOffset()
-      const initialPosition = delta
-        ? { x: delta.x, y: delta.y }
-        : { x: centerX, y: centerY }
-      // Check if the item being dropped already exists based on ID
-      if (!droppedItems.some((droppedItem) => droppedItem.id === item.id)) {
-        setDroppedItems((currentItems) => [
-          ...currentItems,
-          { ...item, position: initialPosition },
-        ])
+      const initialPosition = delta ? { x: delta.x, y: delta.y } : { x: 0, y: 0 }
+
+      let newX
+      const centerY = initialPosition.y
+
+      if (droppedItems.length === 0) {
+        newX = boxRect.width / 2 - 50 // Assuming item width is 100px
+      } else {
+        const lastItem = droppedItems[droppedItems.length - 1]
+        newX = lastItem.position.x + 110 // 100px item width + 10px gap
       }
-      // Handle the dropped item here (e.g., add it to the animation box)
+
+      const newItem = {
+        ...item,
+        position: { x: newX, y: centerY },
+      }
+
+      setDroppedItems((currentItems) => [...currentItems, newItem])
     },
   }))
 
   const handleRightClick = (event, item) => {
-    event.preventDefault() // Prevent the default context menu from opening
-    const itemPosition = item.position // Assuming `item.position` contains the { x, y } coordinates of the item
+    event.preventDefault()
+    const itemPosition = item.position
     setContextMenu({
       visible: true,
-      x: event.pageX - itemPosition.x, // Adjust based on item's position
-      y: event.pageY - itemPosition.y, // Adjust based on item's position
+      x: event.pageX - itemPosition.x,
+      y: event.pageY - itemPosition.y,
       currentItem: item,
     })
   }
@@ -112,13 +114,12 @@ function AnimationBox(props: any) {
       let newX = event.clientX - offset.x
       let newY = event.clientY - offset.y
 
-      // Get the bounding rectangle of the animation box
       const boxRect = document
         .querySelector('.animation-box')
         ?.getBoundingClientRect()
 
-      newX = Math.min(Math.max(newX, 0), boxRect.width - 162) // Assuming the draggable item is 50px wide
-      newY = Math.min(Math.max(newY, 0), boxRect.height - 162) // Assuming the draggable item is 50px tall
+      newX = Math.min(Math.max(newX, 0), boxRect.width - 100) // Assuming item width is 100px
+      newY = Math.min(Math.max(newY, 0), boxRect.height - 100) // Assuming item height is 100px
 
       setDroppedItems((items) =>
         items.map((item) =>
@@ -132,7 +133,7 @@ function AnimationBox(props: any) {
   )
 
   const mergeItems = useCallback((item1, item2, mergeRule) => {
-    setIsCalculating(true) // Start calculating
+    setIsCalculating(true)
     console.log('Merging', item1, item2)
     setTimeout(() => {
       setDroppedItems((currentItems) => {
@@ -148,7 +149,6 @@ function AnimationBox(props: any) {
             y: (item1.position.y + item2.position.y) / 2,
           },
           image: mergeRule.result.image,
-          // Add any other necessary properties for the merged item
         }
         return [...filteredItems, mergedItem]
       })
@@ -159,19 +159,11 @@ function AnimationBox(props: any) {
   const endDrag = useCallback(() => {
     setDragging(false)
     setCurrentItem(null)
-    // Check for overlaps with items   //of the same type
     droppedItems.forEach((item) => {
       if (item.id !== currentItem.id) {
-        // && item.type === currentItem.type
         if (doItemsOverlap(currentItem, item)) {
           console.log('OVERLAPP!!!', item?.name, currentItem?.name)
           const currentStep = procedureSteps.steps[currentStepIndex]
-          // Find the relevant merge rule
-          // const currentStep = procedureSteps.steps.find(
-          //   (step) =>
-          //     step.apparatus.some((app) => app.name === currentItem.name) ||
-          //     step.substances.some((sub) => sub.name === currentItem.name)
-          // )
           console.log(currentStep, currentStepIndex)
           if (isValidMergeForStep(currentItem, item, currentStep)) {
             const mergeRule = currentStep.mergeRules?.find((rule) => {
@@ -185,8 +177,6 @@ function AnimationBox(props: any) {
 
             console.log('Merge rule found:', mergeRule)
             setTimeout(() => mergeItems(currentItem, item, mergeRule), 500)
-            // mergeItems(currentItem, item)
-            // Optionally, move to the next step
             if (currentStepIndex === procedureSteps.steps.length - 1) {
               setIsCalculating(false)
               setCurrentStepIndex(currentStepIndex + 1)
@@ -217,14 +207,14 @@ function AnimationBox(props: any) {
     const rect1 = {
       x: item1.position.x,
       y: item1.position.y,
-      width: 50,
-      height: 50,
-    } // Assuming fixed size for simplicity
+      width: 100, // Assuming item width is 100px
+      height: 100, // Assuming item height is 100px
+    }
     const rect2 = {
       x: item2.position.x,
       y: item2.position.y,
-      width: 50,
-      height: 50,
+      width: 100, // Assuming item width is 100px
+      height: 100, // Assuming item height is 100px
     }
 
     return !(
@@ -236,15 +226,6 @@ function AnimationBox(props: any) {
   }
 
   function isValidMergeForStep(currentItem, item, currentStep) {
-    // Check if there's a merge rule for the current items in the current step
-    // const mergeRule = currentStep.mergeRules?.find(
-    //   (rule) =>
-    //     (rule.with.substance === item.name ||
-    //       rule.with.apparatus === item.name) &&
-    //     (rule.result.name === currentItem.name ||
-    //       rule.result.name === item.name)
-    // )
-
     console.log(currentStep)
     const mergeRule = currentStep.mergeRules?.find((rule) => {
       return (
@@ -257,11 +238,10 @@ function AnimationBox(props: any) {
 
     console.log(mergeRule)
 
-    return !!mergeRule // Returns true if a merge rule is found, false otherwise
+    return !!mergeRule
   }
 
   function generateUniqueId() {
-    // Generate a random number and concatenate it with a timestamp to create a unique ID
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 5)
   }
 
@@ -291,7 +271,6 @@ function AnimationBox(props: any) {
         overflow: 'hidden',
       }}
     >
-      {/* Pseudo-element for background with opacity */}
       <div
         style={{
           position: 'absolute',
@@ -300,14 +279,13 @@ function AnimationBox(props: any) {
           width: '100%',
           height: '100%',
           backgroundImage: randomBackgroundImage,
-          backgroundPosition: 'bottom center',
-          backgroundSize: '30rem, cover',
+          backgroundPosition: '50% 108%', //'bottom center',
+          backgroundSize: '25rem, cover',
           backgroundRepeat: 'no-repeat, no-repeat',
-          opacity: 0.5, // Only the background is transparent
-          zIndex: -1, // Ensure it's under all other content
+          opacity: 0.5,
+          zIndex: -1,
         }}
       ></div>
-      {/* Steps Card */}
       <div
         className="absolute top-2 left-2 bg-white p-4 border rounded shadow-lg"
         style={{ maxHeight: '80%', overflowY: 'auto', width: '25%' }}
@@ -329,7 +307,6 @@ function AnimationBox(props: any) {
           ))}
         </ul>
       </div>
-      {/* loader */}
       {isCalculating && (
         <div className="absolute z-10 flex justify-center items-center w-full h-full">
           <img
@@ -342,20 +319,18 @@ function AnimationBox(props: any) {
           </p>
         </div>
       )}
-      {/* Animation content */}
       {droppedItems.length > 0 ? (
         droppedItems.map((item, index) => (
           <div
             key={index}
             onMouseDown={(e) => {
               if (e.button === 2) {
-                // Right click
                 handleRightClick(e, item)
               } else {
                 startDrag(item, e)
               }
             }}
-            onContextMenu={(e) => e.preventDefault()} // Prevent the default context menu
+            onContextMenu={(e) => e.preventDefault()}
             style={{
               position: 'absolute',
               left: item.position.x,
@@ -373,16 +348,8 @@ function AnimationBox(props: any) {
             <p className="text-xs truncate text-center">
               {item.name}
               {item?.formula && <TokenizeFormula formula={item?.formula} />}
-              {/* <TokenizeFormula formula={item.formula} /> */}
             </p>
           </div>
-          // <div key={index}>
-          //   <img
-          //     src={item?.image}
-          //     style={{ maxHeight: '100%', height: '10em', cursor: 'move' }}
-          //   />
-          //   {/* <p>{item.name}</p> */}
-          // </div>
         ))
       ) : (
         <p className="text-center align-middle my-52 mx-24 shadow-inner bg-gray-200">
@@ -390,13 +357,6 @@ function AnimationBox(props: any) {
         </p>
       )}
       <div className="absolute top-2 right-2 border">
-        {/* <button
-          // onClick={() => setDroppedItems([])}
-          className="border-green-500 text-green-500 bg-gray-100 mx-1 px-4 py-2 text-lg rounded cursor-pointer shadow transition-all hover:bg-green-500 hover:text-white hover:shadow-lg"
-        >
-          ✔️
-          <p className="text-xs">Submit</p>
-        </button> */}
         <button
           onClick={() => {
             setCurrentStepIndex(0)
@@ -407,22 +367,6 @@ function AnimationBox(props: any) {
           ❌<p className="text-xs">Reset Workbench</p>
         </button>
       </div>
-      {/* {contextMenu.visible && (
-        <ContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          itemX={contextMenu.currentItem.position.x}
-          itemY={contextMenu.currentItem.position.y
-          onRemove={() => {
-            setDroppedItems(
-              droppedItems.filter(
-                (item) => item.id !== contextMenu.currentItem.id
-              )
-            )
-            setContextMenu({ ...contextMenu, visible: false }) // Hide context menu
-          }}
-        />
-      )} */}
       <SimpleModal
         isOpen={isModalOpen}
         onClose={closeModal}
@@ -430,21 +374,7 @@ function AnimationBox(props: any) {
         nextStep={modalContent}
         warning={modalContent2}
       />
-      {/* {isExperimentCompleted && (
-        <SimpleModal
-          isOpen={isExperimentCompleted}
-          onClose={closeModal}
-          // onClose={() => setIsExperimentCompleted(false)}
-        >
-          <p>
-            You've successfully completed the experiment. You can clear the
-            workbench to restart the experiment!
-          </p>
-        </SimpleModal>
-      )} */}
     </div>
-    //   <div className="w-1/4 h-full fixed">WIUNN</div>
-    // </div>
   )
 }
 

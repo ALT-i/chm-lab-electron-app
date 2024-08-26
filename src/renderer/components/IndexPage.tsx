@@ -153,7 +153,11 @@ function IndexPage(props: any) {
                     <Typography variant="h3" color="green" textGradient>
                       {classTitle}
                     </Typography>
-                    <Typography variant="paragraph" color="blue-gray">
+                    <Typography
+                      variant="paragraph"
+                      color="blue-gray"
+                      textGradient
+                    >
                       {/* Instructor: {classInstructor} */}
                     </Typography>
                   </div>
