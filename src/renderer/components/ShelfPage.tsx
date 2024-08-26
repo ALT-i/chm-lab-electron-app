@@ -93,14 +93,16 @@ function ShelfPage(props: any) {
     setChosenShelf(type)
 
     axios
-      .get(`${server.absolute_url}/${server.workbench}/${type}/`, {
-        headers: {
+      .get(
+        `${server.absolute_url}/${server.workbench}/${type}/?limit=100`,
+        {
+          headers: {
           'Content-Type': 'application/json',
           // "authorization": token
         },
       })
       .then((res) => {
-        setShelfItems(res.data.results)
+        setShelfItems(res.data.data.results)
 
         console.log(shelfItems)
       })

@@ -56,8 +56,8 @@ function IndexPage(props: any) {
           },
         })
         .then((res) => {
-          console.log(res.data)
-          substanceNames.push[res.data.name]
+          console.log(res.data.data)
+          substanceNames.push[res.data.data.name]
         })
         .catch((err) => {
           if (err.message === 'Network Error') {
@@ -85,14 +85,14 @@ function IndexPage(props: any) {
           // setSubstances(res.data.substances);
           // setApparatus(res.data.apparatus);
           // getSubstance(res.data.substances);
-          setTools(res.data.tools)
-          setSubstances(res.data.substances)
-          setClassInstruction(res.data.instructions)
-          setClassInstructor(res.data.instructor)
-          setClassProcedure(res.data.procedure)
-          setClassParameters(res.data.parameters)
-          setClassTitle(res.data.title)
-          setClassVideo(res.data.video_file)
+          setTools(res.data.data.tools)
+          setSubstances(res.data.data.substances)
+          setClassInstruction(res.data.data.instructions)
+          // setClassInstructor(res.data.data.instructor)
+          setClassProcedure(res.data.data.procedure)
+          setClassParameters(res.data.data.parameters)
+          setClassTitle(res.data.data.title)
+          setClassVideo(res.data.data.video_file)
         })
         .catch((err) => {
           if (err.message === 'Network Error') {
@@ -149,20 +149,27 @@ function IndexPage(props: any) {
                   >
                     &#10094;
                   </button>
-                  <h3>{classTitle}</h3>
+                  <div className="ml-5 px-2">
+                    <Typography variant="h3" color="green" textGradient>
+                      {classTitle}
+                    </Typography>
+                    <Typography variant="paragraph" color="blue-gray">
+                      {/* Instructor: {classInstructor} */}
+                    </Typography>
+                  </div>
+                  {!drawerVisible && (
+                    <p>
+                      <button
+                        className="text-lg bg-green-500 hover:bg-white  font-normal px-4 my-1 rounded-lg border shadow-lg"
+                        onClick={() => setDrawerVisible(!drawerVisible)}
+                        title="Toggle Sidebar"
+                      >
+                        Instructions
+                      </button>
+                    </p>
+                  )}
                 </div>
-                {!drawerVisible && (
-                  <p>
-                    <button
-                      className=" text-xl text-gray-800 font-normal px-4 my-2 rounded-full border shadow-lg"
-                      onClick={() => setDrawerVisible(!drawerVisible)}
-                      title="Toggle Sidebar"
-                    >
-                      Instructions
-                    </button>
-                  </p>
-                )}
-                {/* <h3 className='float-right'>Instructor: {classInstructor}</h3> */}
+                {/* <h3 className="float-right">Instructor: {classInstructor}</h3> */}
                 {/* <p>Parameters: {classParameters}</p> */}
               </div>
               <div
@@ -174,7 +181,7 @@ function IndexPage(props: any) {
                 <StockRoomPanel
                   substances={substances}
                   tools={tools}
-                  classInstructor={classInstructor}
+                  // classInstructor={classInstructor}
                 />
                 <AnimationBox
                   procedure={classProcedure}
@@ -184,7 +191,7 @@ function IndexPage(props: any) {
                   isOpen={drawerVisible}
                   closeDrawer={togglePanel}
                   classTitle={classTitle}
-                  classInstructor={classInstructor}
+                  // classInstructor={classInstructor}
                   classVideo={classVideo}
                   classInstruction={classInstruction}
                 />

@@ -17,15 +17,16 @@ function DisplayClasses(props: any) {
     const token = `Bearer ` + tokenData.access
 
     axios
-      .get(`${server.absolute_url}/${server.workspace}/`, {
+      .get(`${server.absolute_url}/${server.workspace}/?limit=100`, {
         headers: {
           'Content-Type': 'application/json',
           // "authorization": token
         },
       })
       .then((res) => {
-        window.localStorage.setItem('classes', JSON.stringify(res.data.results))
-        setClasses(res.data.results)
+        window.localStorage.setItem('classes', JSON.stringify(res.data.data.results))
+        console.log(res.data)
+        setClasses(res.data.data.results)
       })
       .catch((err) => {
         if (err.message === 'Network Error') {
@@ -54,8 +55,8 @@ function DisplayClasses(props: any) {
   }
 
   useEffect(() => {
-    setClasses(JSON.parse(window.localStorage.getItem('classes')))
     getClasses()
+    // setClasses(JSON.parse(window.localStorage.getItem('classes')))
   }, [])
 
   return (
