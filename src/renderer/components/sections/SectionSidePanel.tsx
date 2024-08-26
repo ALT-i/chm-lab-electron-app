@@ -25,8 +25,18 @@ function SectionSidePanel(props: any) {
   const navigate = useNavigate()
   const store = useWindowStore().about
 
-  const userData = JSON.parse(window.localStorage.getItem('user_data'))
-  const user_fname = userData?.first_name
+  let userData = null
+  let user_fname = ''
+
+  try {
+    const userDataString = window.localStorage.getItem('user_data')
+    if (userDataString) {
+      userData = JSON.parse(userDataString) || {}
+      user_fname = userData?.first_name || ''
+    }
+  } catch (error) {
+    console.error('Error parsing user data:', error)
+  }
 
   function toggleShelfMenu() {
     setIsShelfMenuOpen(!isShelfMenuOpen)

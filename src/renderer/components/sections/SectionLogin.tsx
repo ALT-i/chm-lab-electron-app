@@ -25,7 +25,7 @@ function SectionLogin() {
     axios
       .get(`${server.absolute_url}/${server.user}/${id}/`)
       .then((res) => {
-        window.localStorage.setItem('user_data', JSON.stringify(res.data))
+        window.localStorage.setItem('user_data', JSON.stringify(res.data.first_name))
       })
       .catch((err) => {
         console.log(err)

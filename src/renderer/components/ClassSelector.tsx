@@ -27,7 +27,7 @@ const ClassSelector = (props: any) => {
   const getClassDetails = (e: any) => {
     console.log(e.target.id)
     addCompletedClass(e.target.id)
-    const user_info = JSON.parse(window.localStorage.getItem('user_data'))
+    // const user_info = JSON.parse(window.localStorage.getItem('user_data'))
     // axios
     //   .patch(
     //     `${server.absolute_url}/${server.user}/${user_info.id}/`,
