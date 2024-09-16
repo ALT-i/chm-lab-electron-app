@@ -3,6 +3,7 @@ import { useDrop } from 'react-dnd'
 import TokenizeFormula from '../Formula'
 import ContextMenu from '../ContextMenu'
 import SimpleModal from '../SimpleModal'
+import LiquidGauge from 'react-liquid-gauge'
 
 interface Item {
   type: string
@@ -62,6 +63,37 @@ function AnimationBox(props: any) {
     setIsModalOpen(false)
   }, [])
 
+  const handleVolumeChange = (volume) => {
+    // Logic to handle volume change and simulate pouring
+    console.log('Volume to add:', volume)
+    // Use react-liquid-gauge to simulate pouring
+    // Update the state or perform any other necessary actions
+  }
+
+  const handleRightClick = (event, item) => {
+    event.preventDefault()
+    const itemPosition = item.position
+    setContextMenu({
+      visible: true,
+      x: event.pageX,
+      y: event.pageY,
+      currentItem: item,
+    })
+  }
+
+  const handleClickOutside = (event) => {
+    if (contextMenu.visible) {
+      setContextMenu({ ...contextMenu, visible: false })
+    }
+  }
+
+  useEffect(() => {
+    window.addEventListener('click', handleClickOutside)
+    return () => {
+      window.removeEventListener('click', handleClickOutside)
+    }
+  }, [contextMenu.visible])
+
   const [, dropRef] = useDrop(() => ({
     accept: ['SUBSTANCE', 'TOOL'],
     drop: (item: Item, monitor) => {
@@ -77,7 +109,7 @@ function AnimationBox(props: any) {
 
       let newX
       const minY = 50 // Set your minimum Y value here
-      const maxY = boxRect.height - 250 // Assuming item height is 100px
+      const maxY = boxRect.height - 250 // Assuming item height is 250px
       let centerY = initialPosition.y
 
       if (centerY < minY) {
@@ -110,26 +142,15 @@ function AnimationBox(props: any) {
 
       console.log('Dropped item:', newItem)
 
-      // setDroppedItems((currentItems) => [...currentItems, newItem])
+      setDroppedItems((currentItems) => [...currentItems, newItem])
       // Use a callback to log the updated state
-      setDroppedItems((currentItems: DroppedItem[]) => {
-        const updatedItems = [...currentItems, newItem]
-        console.log('Updated dropped items:', updatedItems)
-        return updatedItems
-      })
+      // setDroppedItems((currentItems: DroppedItem[]) => {
+      //   const updatedItems = [...currentItems, newItem]
+      //   console.log('Updated dropped items:', updatedItems)
+      //   return updatedItems
+      // })
     },
   }))
-
-  const handleRightClick = (event, item) => {
-    event.preventDefault()
-    const itemPosition = item.position
-    setContextMenu({
-      visible: true,
-      x: event.pageX - itemPosition.x,
-      y: event.pageY - itemPosition.y,
-      currentItem: item,
-    })
-  }
 
   const startDrag = useCallback((item, event) => {
     setDragging(true)
@@ -406,6 +427,28 @@ function AnimationBox(props: any) {
         nextStep={modalContent}
         warning={modalContent2}
       />
+      {contextMenu.visible && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          itemX={contextMenu.currentItem.position.x}
+          itemY={contextMenu.currentItem.position.y}
+          onRemove={() => {
+            setDroppedItems((currentItems) =>
+              currentItems.filter((item) => item.id !== contextMenu.currentItem.id)
+            )
+            setContextMenu({ ...contextMenu, visible: false })
+          }}
+          onVolumeChange={handleVolumeChange}
+          itemType={contextMenu.currentItem.type}
+        />
+      )}
+      {/* <LiquidGauge
+        value={50} // Example value, replace with actual state
+        width={200}
+        height={200}
+        // Add other necessary props
+      /> */}
     </div>
   )
 }

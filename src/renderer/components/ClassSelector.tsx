@@ -5,9 +5,11 @@ import axios from 'axios'
 import server from '../utils'
 import DisplayClasses from './sections/DisplayClasses'
 import { Typography } from '@material-tailwind/react'
+import RingLoader from 'react-spinners/RingLoader'
 
 const ClassSelector = (props: any) => {
   const [hashedClasses, setHashedClasses] = useState(null)
+  const [loading, setLoading] = useState(true) // Add loading state
   const isPanelOpen = props.isPanelOpen
   const navigate = useNavigate()
 
@@ -27,65 +29,23 @@ const ClassSelector = (props: any) => {
   const getClassDetails = (e: any) => {
     console.log(e.target.id)
     addCompletedClass(e.target.id)
-    // const user_info = JSON.parse(window.localStorage.getItem('user_data'))
-    // axios
-    //   .patch(
-    //     `${server.absolute_url}/${server.user}/${user_info.id}/`,
-    //     {
-    //       progress: `${hashedClasses}`,
-    //     },
-    //     {
-    //       headers: {
-    //         'Content-Type': 'application/json',
-    //         // "authorization": token
-    //       },
-    //     }
-    //   )
-    //   .then((res) => {
-    //     console.log(res.data)
-    //   })
-    //   .catch((err) => {
-    //     if (err.message === 'Network Error') {
-    //       console.log(err)
-    //     }
-    //   })
-
     navigate(`/home/${e.target.id}`)
   }
 
   useEffect(() => {
-    if (hashedClasses) {
-      for (const item of hashedClasses) {
-        document.getElementById(item).classList.add('active')
+    // Simulate fetching class details
+    const fetchClassDetails = async () => {
+      try {
+        // Replace with your actual API call
+        await axios.get(`${server.absolute_url}/classes`)
+        setLoading(false) // Set loading to false after fetching
+      } catch (error) {
+        console.error('Error fetching class details:', error)
+        setLoading(false) // Set loading to false even on error
       }
     }
-    //     const hashedClasses = JSON.parse(window.localStorage.getItem("completed-classes"))
-    //     const user_id = JSON.parse(window.localStorage.getItem("userid"))
-    //     if(hashedClasses) {
-    //          setCompletedClasses(hashedClasses);
-    //     }{
-    //         let token
-    //         const tokenData = JSON.parse(window.localStorage.getItem("tokens"))
-    //         if (!tokenData) {
-    //             navigate('/auth')
-    //         }else{
-    //             token = `Bearer ` + tokenData.access
-    //         }
 
-    // axios.get(`${server.absolute_url}/${server.user_auth}/${user_id}`, {         //Get list of completed classes from server
-    //             headers: {
-    //                 "Content-Type": "application/json",
-    //                 "authorization": token
-    //             }
-    //         }).then((res) => {
-    //             setCompletedClasses(res.data.completed_class)  //Get completed class list from response
-    //             window.localStorage.setItem("levels", JSON.stringify(res.data.completed_class))
-
-    //         }).catch(err => {
-    //             // if(err.message === "Network Error") setLevels(oldLevels);
-    //             // console.log(err)
-
-    //         })
+    fetchClassDetails()
   }, [])
 
   return (

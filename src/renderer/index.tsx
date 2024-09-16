@@ -1,11 +1,10 @@
 import ReactDom from 'react-dom/client'
 import React from 'react'
 
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+import { DndProvider } from 'react-dnd'
+import { HTML5Backend } from 'react-dnd-html5-backend'
 
-import { ThemeProvider } from "@material-tailwind/react";
-
+import { ThemeProvider } from '@material-tailwind/react'
 
 import { WindowStoreProvider } from './store'
 import { AppRoutes } from './routes'

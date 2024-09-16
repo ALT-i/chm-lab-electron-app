@@ -69,7 +69,7 @@ function StockRoomPanel(props: any) {
           <p>Substances</p>
         </AccordionHeader>
         <AccordionBody className="pt-0 text-base font-normal">
-          <ul className="apparatus-list grid grid-cols-3 gap-1 justify-center">
+          <ul className="apparatus-list grid grid-cols-2 gap-1 justify-center">
             {substances &&
               substances.map((subs, index) => (
                 // <li>{subs}</li>
