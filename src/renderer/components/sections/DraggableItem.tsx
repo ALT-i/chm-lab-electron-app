@@ -16,7 +16,7 @@ interface DraggableItemProps {
 function DraggableItem({ item, type, onRightClick }: DraggableItemProps) {
   const [{ isDragging }, dragRef] = useDrag(() => ({
     type: type,
-    item: { ...item, id: `${type}-${item.id}` },
+    item: { ...item, id: `${type}-${item.id}`, type: type },
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),

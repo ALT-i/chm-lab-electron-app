@@ -3,7 +3,7 @@ import { useDrop } from 'react-dnd'
 import TokenizeFormula from '../Formula'
 import ContextMenu from '../ContextMenu'
 import SimpleModal from '../SimpleModal'
-import LiquidGauge from 'react-liquid-gauge'
+import VolumeInputDialog from '../VolumeInputDialog'
 
 interface Item {
   type: string
@@ -32,6 +32,14 @@ function AnimationBox(props: any) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [isCalculating, setIsCalculating] = useState(false)
   const [isExperimentCompleted, setIsExperimentCompleted] = useState(false)
+  const [volumeDialogData, setVolumeDialogData] = useState({
+    isOpen: false,
+    onConfirm: null,
+    onCancel: null,
+    maxVolume: 0,
+    recommendedVolume: 0,
+  })
+  const [mergeImageSrc, setMergeImageSrc] = useState('')
 
   const backgroundImages = [
     'url("./real_chemLab_bg.jpg")',
@@ -185,7 +193,7 @@ function AnimationBox(props: any) {
     [dragging, currentItem, offset]
   )
 
-  const mergeItems = useCallback((item1, item2, mergeRule) => {
+  const mergeItems = useCallback((item1, item2, mergeRule, volume, unit) => {
     setIsCalculating(true)
     console.log('Merging', item1, item2)
     setTimeout(() => {
@@ -195,13 +203,16 @@ function AnimationBox(props: any) {
         )
         const mergedItem = {
           id: `merged-${Date.now()}`,
-          name: mergeRule.result.name,
+          name: mergeRule.result.name, // Keep the original name for matching
+          displayName: `${volume} ${unit} of ${mergeRule.result.name}`, // Add a display name
           type: item1.type,
           position: {
             x: (item1.position.x + item2.position.x) / 2,
             y: (item1.position.y + item2.position.y) / 2,
           },
           image: mergeRule.result.image,
+          volume: volume,
+          unit: unit,
         }
         return [...filteredItems, mergedItem]
       })
@@ -215,9 +226,8 @@ function AnimationBox(props: any) {
     droppedItems.forEach((item) => {
       if (item.id !== currentItem.id) {
         if (doItemsOverlap(currentItem, item)) {
-          console.log('OVERLAPP!!!', item?.name, currentItem?.name)
           const currentStep = procedureSteps.steps[currentStepIndex]
-          console.log(currentStep, currentStepIndex)
+
           if (isValidMergeForStep(currentItem, item, currentStep)) {
             const mergeRule = currentStep.mergeRules?.find((rule) => {
               return (
@@ -228,19 +238,56 @@ function AnimationBox(props: any) {
               )
             })
 
-            console.log('Merge rule found:', mergeRule)
-            setTimeout(() => mergeItems(currentItem, item, mergeRule), 500)
-            if (currentStepIndex === procedureSteps.steps.length - 1) {
-              setIsCalculating(false)
-              setCurrentStepIndex(currentStepIndex + 1)
-              setIsExperimentCompleted(true)
-              showModal(
-                `Experiment Complete!`,
-                `You've successfully completed the experiment and have achieved the final result of ${item?.name}. You can clear the
-                workbench to restart the experiment!`
-              )
+            if (currentItem.type === 'SUBSTANCE' || item.type === 'SUBSTANCE') {
+              console.log('SUBSTANCE dropped, opening volume dialog')
+              const maxVolume = 500 // Set this to the appropriate maximum volume
+              const recommendedVolume = 200 // Set this to the appropriate recommended volume
+              setVolumeDialogData({
+                isOpen: true,
+                onConfirm: (volume, unit) => {
+                  setVolumeDialogData((prev) => ({ ...prev, isOpen: false }))
+                  console.log('Merging items with volume:', volume, unit)
+                  mergeItems(currentItem, item, mergeRule, volume, unit)
+                  if (currentStepIndex === procedureSteps.steps.length - 1) {
+                    setIsCalculating(false)
+                    setCurrentStepIndex(currentStepIndex + 1)
+                    setIsExperimentCompleted(true)
+                    showModal(
+                      `Experiment Complete!`,
+                      `You've successfully completed the experiment and have achieved the final result of ${item?.name}. You can clear the
+                      workbench to restart the experiment!`
+                    )
+                  } else {
+                    setCurrentStepIndex(currentStepIndex + 1)
+                  }
+                },
+                onCancel: () => {
+                  console.log('Volume input cancelled')
+                  setDroppedItems((currentItems) =>
+                    currentItems.filter((item) => item.id !== currentItem.id)
+                  )
+                  setVolumeDialogData((prev) => ({ ...prev, isOpen: false }))
+                },
+                maxVolume: maxVolume,
+                recommendedVolume: recommendedVolume,
+              })
             } else {
-              setCurrentStepIndex(currentStepIndex + 1)
+              setTimeout(
+                () => mergeItems(currentItem, item, mergeRule, 0, 'cm³'),
+                500
+              )
+              if (currentStepIndex === procedureSteps.steps.length - 1) {
+                setIsCalculating(false)
+                setCurrentStepIndex(currentStepIndex + 1)
+                setIsExperimentCompleted(true)
+                showModal(
+                  `Experiment Complete!`,
+                  `You've successfully completed the experiment and have achieved the final result of ${item?.name}. You can clear the
+                  workbench to restart the experiment!`
+                )
+              } else {
+                setCurrentStepIndex(currentStepIndex + 1)
+              }
             }
           } else {
             showModal(
@@ -248,6 +295,9 @@ function AnimationBox(props: any) {
               `${currentStep?.description}`,
               `Cannot combine ${currentItem?.name} and ${item?.name}. This is not a valid next step in the experiment!`
             )
+            // setDroppedItems((currentItems) =>
+            //   currentItems.filter((item) => item.id !== currentItem.id)
+            // )
           }
         } else {
           console.log('No overlap between', currentItem.name, 'and', item.name)
@@ -395,11 +445,11 @@ function AnimationBox(props: any) {
           >
             <img
               src={item.image}
-              alt={item.name}
+              alt={item.displayName || item.name}
               style={{ width: '10em', height: '10em', display: 'block' }}
             />
-            <p className="text-xs truncate text-center">
-              {item.name}
+            <p className="text-sm font-medium[] truncate text-center">
+              {item.displayName || item.name}
               {item?.formula && <TokenizeFormula formula={item?.formula} />}
             </p>
           </div>
@@ -427,6 +477,13 @@ function AnimationBox(props: any) {
         nextStep={modalContent}
         warning={modalContent2}
       />
+      <VolumeInputDialog
+        isOpen={volumeDialogData.isOpen}
+        onClose={volumeDialogData.onCancel}
+        onConfirm={volumeDialogData.onConfirm}
+        maxVolume={volumeDialogData.maxVolume}
+        recommendedVolume={volumeDialogData.recommendedVolume}
+      />
       {contextMenu.visible && (
         <ContextMenu
           x={contextMenu.x}
@@ -435,20 +492,16 @@ function AnimationBox(props: any) {
           itemY={contextMenu.currentItem.position.y}
           onRemove={() => {
             setDroppedItems((currentItems) =>
-              currentItems.filter((item) => item.id !== contextMenu.currentItem.id)
+              currentItems.filter(
+                (item) => item.id !== contextMenu.currentItem.id
+              )
             )
             setContextMenu({ ...contextMenu, visible: false })
           }}
-          onVolumeChange={handleVolumeChange}
+          // onVolumeChange={handleVolumeChange}
           itemType={contextMenu.currentItem.type}
         />
       )}
-      {/* <LiquidGauge
-        value={50} // Example value, replace with actual state
-        width={200}
-        height={200}
-        // Add other necessary props
-      /> */}
     </div>
   )
 }
