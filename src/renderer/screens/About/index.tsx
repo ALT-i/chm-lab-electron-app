@@ -18,7 +18,7 @@ import {
 } from '@material-tailwind/react'
 
 // Get version from environment or use a default
-const APP_VERSION = process.env.npm_package_version || '0.9.5'
+const APP_VERSION = process.env.APP_VERSION || '1.1.0'
 
 export function AboutScreen() {
   const navigate = useNavigate()
@@ -51,7 +51,7 @@ export function AboutScreen() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-700 overflow-hidden">
       <div className="h-screen overflow-y-auto p-4">
-        <Container>
+    <Container>
           <Card className="w-full max-w-6xl mx-auto my-4">
             <CardBody className="p-6">
               {/* Navigation Header */}
@@ -202,7 +202,7 @@ export function AboutScreen() {
                         </Card>
                       </div>
 
-                      <div className="bg-gray-50 rounded-lg p-4">
+                      {/* <div className="bg-gray-50 rounded-lg p-4">
                         <Typography variant="h6" color="gray" className="mb-3 text-center">
                           System Information
                         </Typography>
@@ -232,7 +232,7 @@ export function AboutScreen() {
                             <Chip value="MIT" color="orange" size="sm" />
                           </div>
                         </div>
-                      </div>
+            </div> */}
                     </div>
                   </TabPanel>
 
@@ -494,7 +494,7 @@ export function AboutScreen() {
                 </Typography>
                 <Typography variant="small" color="gray" className="mt-1">
                   Developed with ❤️ for enhanced learning experiences
-                </Typography>
+          </Typography>
               </div>
             </CardBody>
           </Card>

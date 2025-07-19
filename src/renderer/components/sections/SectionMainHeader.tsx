@@ -6,7 +6,7 @@ import { useWindowStore } from 'renderer/store'
 import { Typography } from '@material-tailwind/react'
 
 // Get version from environment or use a default
-const APP_VERSION = process.env.npm_package_version || '0.9.5'
+const APP_VERSION = process.env.APP_VERSION || '1.1.0'
 
 function SectionMainHeader() {
   const navigate = useNavigate()
