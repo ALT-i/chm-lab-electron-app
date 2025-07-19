@@ -10,4 +10,8 @@ const server = {
   workspace: 'api/v1/workspace',
   stack: ['react', 'python', 'electron.js'],
 }
+
+// Export video utilities
+export * from './video-utils'
+
 export default server

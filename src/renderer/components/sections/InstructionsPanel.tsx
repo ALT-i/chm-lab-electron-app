@@ -5,6 +5,7 @@ import {
   Typography,
   IconButton,
 } from '@material-tailwind/react'
+import VideoPlayer from '../VideoPlayer'
 
 function InstructionsPanel(props: any) {
   const [drawerState, setOpenDrawer] = React.useState(false)
@@ -56,16 +57,14 @@ function InstructionsPanel(props: any) {
       </Typography> */}
       </div>
       <div className="lesson-instruction">
-        <video
-          className="h-full w-full mb-5 rounded-lg"
-          controls
+        <VideoPlayer
+          src={classVideo}
+          className="h-full w-full mb-5"
+          controls={true}
           autoPlay={false}
-          muted
-          key={classVideo}
-        >
-          <source src={classVideo} type="video/mp4" />
-          Error fetching demo video.
-        </video>
+          muted={true}
+          onError={(error) => console.error('Video error:', error)}
+        />
         <div
           className="!list-decimal"
           dangerouslySetInnerHTML={{ __html: classInstruction }}

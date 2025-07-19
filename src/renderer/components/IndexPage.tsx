@@ -95,9 +95,12 @@ function IndexPage(props: any) {
           setClassVideo(res.data.data.video_file)
         })
         .catch((err) => {
-          if (err.message === 'Network Error') {
-            console.log(err)
+          console.error('Error fetching workbench:', err)
+          // Handle specific error cases
+          if (err.response?.status === 401) {
+            navigate('/login')
           }
+          // Show user-friendly error message
         })
     }
   }

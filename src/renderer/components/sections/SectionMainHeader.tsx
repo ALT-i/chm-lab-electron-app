@@ -3,8 +3,10 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWindowStore } from 'renderer/store'
 
-import packageJson from '../../../../package.json'
 import { Typography } from '@material-tailwind/react'
+
+// Get version from environment or use a default
+const APP_VERSION = process.env.npm_package_version || '0.9.5'
 
 function SectionMainHeader() {
   const navigate = useNavigate()
@@ -43,7 +45,7 @@ function SectionMainHeader() {
           >
             Virtual Chemistry Lab
           </Typography>
-          <p className="italic text-lime-200">v{packageJson.version}</p>
+          <p className="italic text-lime-200">v{APP_VERSION}</p>
         </div>
       </div>
       {/* <button onClick = {() => {

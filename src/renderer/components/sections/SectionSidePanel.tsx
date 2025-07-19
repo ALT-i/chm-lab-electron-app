@@ -46,12 +46,18 @@ function SectionSidePanel(props: any) {
   function goToLogin() {
     window.localStorage.removeItem('user_data')
     window.localStorage.removeItem('auth_tokens')
+    window.localStorage.removeItem('intro_video_seen')
     navigate(`/`)
   }
 
   function openAboutWindow() {
-    App.createAboutWindow()
-    store.setAboutWindowState(true)
+    navigate('/about')
+  }
+
+  function replayIntroVideo() {
+    // Clear the flag so the intro video shows again
+    window.localStorage.removeItem('intro_video_seen')
+    navigate('/intro-video')
   }
 
   function goToClassList() {
@@ -181,6 +187,12 @@ function SectionSidePanel(props: any) {
                   <div className="option" onClick={openAboutWindow}>
                     <p>About</p>
                     <span className="material-symbols-outlined info">info</span>
+                  </div>
+                </div>
+                <div className="profile-option">
+                  <div className="option" onClick={replayIntroVideo}>
+                    <p>Intro Video</p>
+                    <span className="material-symbols-outlined">play_circle</span>
                   </div>
                 </div>
                 <div className="profile-option">

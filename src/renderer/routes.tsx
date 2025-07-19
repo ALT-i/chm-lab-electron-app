@@ -7,6 +7,7 @@ import {
   Dashboard,
   ClassSelectionView,
   Shelf,
+  IntroVideoScreen,
 } from 'renderer/screens'
 
 export function AppRoutes() {
@@ -15,6 +16,8 @@ export function AppRoutes() {
       main={
         <>
           <Route path="/" element={<AuthScreen />} />
+          <Route path="/intro-video" element={<IntroVideoScreen />} />
+          <Route path="/about" element={<AboutScreen />} />
           <Route path="/select-class" element={<ClassSelectionView />} />
           <Route path="/home" element={<ClassSelectionView />} />
           <Route path="/home/:class_id" element={<Dashboard />} />

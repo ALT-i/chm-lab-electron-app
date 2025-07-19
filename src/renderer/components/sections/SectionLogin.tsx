@@ -11,7 +11,7 @@ import server from '../../utils'
 
 function SectionLogin() {
   const navigate = useNavigate()
-  const [feedback, setFeedback] = useState(null)
+  const [feedback, setFeedback] = useState<string | null>(null)
   const [isloading, setIsLoading] = useState(false)
   const override: CSSProperties = {
     fontWeight: '400',
@@ -22,15 +22,19 @@ function SectionLogin() {
   }
 
   async function getUserData(id: string) {
-    axios
-      .get(`${server.absolute_url}/${server.user}/${id}/`)
-      .then((res) => {
-        window.localStorage.setItem('user_data', JSON.stringify(res.data.first_name))
-      })
-      .catch((err) => {
-        console.log(err)
-        setFeedback(err.message)
-      })
+    try {
+      const response = await axios.get(
+        `${server.absolute_url}/${server.user}/${id}/`
+      )
+      window.localStorage.setItem(
+        'user_data',
+        JSON.stringify(response.data.first_name)
+      )
+    } catch (error) {
+      console.error('Error fetching user data:', error)
+      setFeedback(error instanceof Error ? error.message : 'Unknown error')
+      // Consider redirecting to login or showing error message
+    }
   }
 
   const authLogin = (e: any) => {
@@ -54,10 +58,20 @@ function SectionLogin() {
       .then((res) => {
         window.localStorage.setItem('auth_tokens', JSON.stringify(res.data))
         const userInfo: authResData = jwt_decode(res.data.access)
-        getUserData(userInfo.user_id)
+        if (userInfo.user_id) {
+          getUserData(userInfo.user_id)
+        }
         setFeedback(null)
         setTimeout(() => {
-          navigate('/home')
+          // Check if user has seen intro video for this session
+          const introVideoSeen = window.localStorage.getItem('intro_video_seen')
+          if (introVideoSeen === 'true') {
+            // User has seen intro video, go directly to home
+            navigate('/home')
+          } else {
+            // User hasn't seen intro video, show it first
+            navigate('/intro-video')
+          }
           setIsLoading(false)
         }, 1000)
       })

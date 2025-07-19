@@ -13,9 +13,9 @@ function SectionMainHero() {
   const navigate = useNavigate()
 
   const activateLink = (e: any) => {
-    setLevelState(!levelState)
-    const oldLevels = JSON.parse(window.localStorage.getItem('oldlevels'))
-    if (oldLevels) {
+    try {
+      const oldLevels = JSON.parse(window.localStorage.getItem('oldlevels') || '[]')
+      setLevelState(!levelState)
       if (oldLevels.includes(e.target.id)) return
 
       let token
@@ -42,33 +42,9 @@ function SectionMainHero() {
           }
         })
         .catch((err) => console.log(err))
-    } else {
-      let token
-      const tokenData = JSON.parse(window.localStorage.getItem('tokens'))
-      if (!tokenData) {
-        navigate('/')
-      } else {
-        token = `Bearer ` + tokenData.access
-      }
-
-      axios
-        .get(`${server.absolute_url}/questions`, {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: token,
-          },
-        })
-        .then((res) => {
-          if (res.status === 200) {
-            window.localStorage.setItem('categories', JSON.stringify(res.data))
-            e.target.classList.add('active')
-            window.localStorage.setItem(
-              'oldlevels',
-              JSON.stringify([e.target.id])
-            )
-          }
-        })
-        .catch((err) => console.log(err))
+    } catch (error) {
+      console.error('Error accessing localStorage:', error)
+      navigate('/')
     }
   }
 

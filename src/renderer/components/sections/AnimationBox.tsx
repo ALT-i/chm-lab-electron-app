@@ -100,7 +100,7 @@ function AnimationBox(props: any) {
     return () => {
       window.removeEventListener('click', handleClickOutside)
     }
-  }, [contextMenu.visible])
+  }, [handleClickOutside])
 
   const [, dropRef] = useDrop(() => ({
     accept: ['SUBSTANCE', 'TOOL'],

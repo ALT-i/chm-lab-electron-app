@@ -32,6 +32,7 @@
   - 🔮 GitHub Action releases with `Windows`, `Mac` and `Linux` binaries
   - 🔒 Source Code Protection support
   - 🍪 Absolute paths support
+  - 🎥 Google Drive video streaming support with error handling
 - **Technologies**:
   - 🔋 Electron
   - 🔥 ReactJS
@@ -177,6 +178,15 @@ const window = createWindow({
         </a>
         <br/><br/>
         <a href="./docs/FAQ.md">FAQ - Frequently Asked Questions</a>
+      </p>
+    </td>
+    <td valign="bottom">
+      <p align="center">
+        <a href="./docs/VIDEO_STREAMING.md">
+          <img src="./docs/images/bullet.svg" height="96" align="center" />
+        </a>
+        <br/><br/>
+        <a href="./docs/VIDEO_STREAMING.md">Video Streaming Guide</a>
       </p>
     </td>
   </tr>

@@ -8,6 +8,11 @@ import server from "../../utils"
 import DisplayOptions from "./DisplayOptions";
 import DisplayCategories from "./DisplayCategories";
 
+interface QuestionItem {
+  question_id: string;
+  answer: string;
+}
+
 function SectionQuizBox () {
     const [questionItem, setQuestionItem] = useState(null)
     const [categories, setCategories] = useState(null)
@@ -16,14 +21,9 @@ function SectionQuizBox () {
     const [score, setScore] = useState(0)
     const [count, setCount] = useState(0)
 
-    const trimList = (questionList: any, id: any) => {
-        if (questionList.length > 0){
-            questionList.splice(questionList.indexOf(id), 1)
-            return questionList;
-        }
-        else{
-            return [];
-        }
+    const trimList = (questionList: QuestionItem[], id: string): QuestionItem[] => {
+        if (!Array.isArray(questionList)) return []
+        return questionList.filter(item => item.question_id !== id)
     }
 
     const checkAnswer = (e: any) => {
