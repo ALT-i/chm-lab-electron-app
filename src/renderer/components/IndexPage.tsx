@@ -4,6 +4,7 @@ import axios from 'axios'
 import { Typography, IconButton, Button } from '@material-tailwind/react'
 
 import server from '../utils'
+import { getAuthHeader } from '../utils/index'
 import SectionSidePanel from './sections/SectionSidePanel'
 import ProgressChartDisplay from './sections/ProgressChartDisplay'
 import AnimationBox from './sections/AnimationBox'
@@ -39,6 +40,30 @@ function IndexPage(props: any) {
 
   const goBack = () => {
     navigate(-1) // Go back to the previous page
+  }
+
+  const submitToMoodle = async () => {
+    try {
+      const email = window.localStorage.getItem('user_email')
+      if (!email) {
+        alert('Missing user email. Please log in again.')
+        return
+      }
+      const headers = { 'Content-Type': 'application/json', ...getAuthHeader() }
+      await axios.post(
+        `${server.absolute_url}/${server.moodle_assignment_grades}`,
+        {
+          course_id: 9,
+          assignment_id: 1,
+          grades: [{ email, grade: 100, feedback: `Completed experiment: ${classTitle || 'Lab'}` }],
+        },
+        { headers }
+      )
+      alert('Successfully submitted to Moodle!')
+    } catch (e: any) {
+      console.error(e)
+      alert(e?.response?.data?.detail || 'Failed to submit to Moodle. Please try again.')
+    }
   }
 
   const isPanelOpen = props.isPanelOpen
@@ -164,17 +189,24 @@ function IndexPage(props: any) {
                       {/* Instructor: {classInstructor} */}
                     </Typography>
                   </div>
-                  {!drawerVisible && (
-                    <p>
+                  <div className="flex gap-2 ml-auto">
+                    <button
+                      className="text-lg bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 my-1 rounded-lg border shadow-lg"
+                      onClick={submitToMoodle}
+                      title="Submit completion to Moodle"
+                    >
+                      📤 Submit to Moodle
+                    </button>
+                    {!drawerVisible && (
                       <button
-                        className="text-lg bg-green-500 hover:bg-white  font-normal px-4 my-1 rounded-lg border shadow-lg"
+                        className="text-lg bg-green-500 hover:bg-white font-normal px-4 my-1 rounded-lg border shadow-lg"
                         onClick={() => setDrawerVisible(!drawerVisible)}
                         title="Toggle Sidebar"
                       >
                         Instructions
                       </button>
-                    </p>
-                  )}
+                    )}
+                  </div>
                 </div>
                 {/* <h3 className="float-right">Instructor: {classInstructor}</h3> */}
                 {/* <p>Parameters: {classParameters}</p> */}

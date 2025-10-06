@@ -172,12 +172,24 @@ function SectionSidePanel(props: any) {
             isPanelOpen ? 'p-6' : 'p-3'
           }`}>
             <div className={`flex items-center ${isPanelOpen ? 'space-x-3' : 'justify-center'}`}>
-              <div
-                className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 cursor-pointer hover:bg-blue-700 transition-colors"
-                title={isPanelOpen ? undefined : `${user_fname} - Chemistry Student`}
-              >
-                {user_fname.charAt(0).toUpperCase()}
-              </div>
+              {(() => {
+                const avatarUrl = window.localStorage.getItem('user_avatar')
+                return avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={user_fname}
+                    className="w-12 h-12 rounded-full object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                    title={isPanelOpen ? undefined : `${user_fname} - Chemistry Student`}
+                  />
+                ) : (
+                  <div
+                    className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 cursor-pointer hover:bg-blue-700 transition-colors"
+                    title={isPanelOpen ? undefined : `${user_fname} - Chemistry Student`}
+                  >
+                    {user_fname.charAt(0).toUpperCase()}
+                  </div>
+                )
+              })()}
               {isPanelOpen && (
                 <div className="flex-1">
                   <Typography className="font-semibold text-gray-900">

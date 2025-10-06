@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
-import server from "../../utils"
+import server from "../../utils/index"
+import { getAuthHeader } from "../../utils/index"
 import DisplayOptions from "./DisplayOptions";
 import DisplayCategories from "./DisplayCategories";
 
@@ -148,6 +149,34 @@ function SectionQuizBox () {
                         <h2>{ score }</h2>
                         <h3>out of</h3>
                         <h2>{ count }</h2>
+                        <button
+                          onClick={async () => {
+                            try {
+                              const headers = { 'Content-Type': 'application/json', ...(getAuthHeader() as any) }
+                              const email = window.localStorage.getItem('user_email')
+                              if (!email) {
+                                alert('Missing user email; please log in again')
+                                return
+                              }
+                              const percent = Math.round((score / Math.max(count, 1)) * 100)
+                              await axios.post(
+                                `${server.absolute_url}/${server.moodle_assignment_grades}`,
+                                {
+                                  course_id: 9,
+                                  assignment_id: 1,
+                                  grades: [{ email, grade: percent, feedback: `Quiz score ${score}/${count}` }],
+                                },
+                                { headers }
+                              )
+                              alert('Submitted to Moodle')
+                            } catch (e: any) {
+                              console.error(e)
+                              alert(e?.response?.data?.detail || 'Failed to submit to Moodle')
+                            }
+                          }}
+                        >
+                          Submit to Moodle
+                        </button>
                     </div> : <div className="question-page">
                         <div className="question-area">
                             <h3>{questionItem.question}</h3>

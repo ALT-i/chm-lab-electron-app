@@ -7,7 +7,8 @@ import PulseLoader from 'react-spinners/PulseLoader'
 
 import { Button } from 'renderer/components'
 
-import server from '../../utils'
+import server from '../../utils/index'
+import { getAuthHeader } from '../../utils/index'
 
 function SectionLogin() {
   const navigate = useNavigate()
@@ -21,15 +22,45 @@ function SectionLogin() {
     user_id?: string
   }
 
-  async function getUserData(id: string) {
+  async function getUserData(id: string, email: string, token: string) {
     try {
       const response = await axios.get(
         `${server.absolute_url}/${server.user}/${id}/`
       )
-      window.localStorage.setItem(
-        'user_data',
-        JSON.stringify(response.data.first_name)
-      )
+      const payload = response?.data?.data
+      const firstName = payload?.first_name || 'Student'
+      const userEmail = payload?.email || email
+      window.localStorage.setItem('user_data', JSON.stringify(firstName))
+      window.localStorage.setItem('user_email', userEmail)
+
+      // Fetch Moodle profile
+      try {
+        const moodleResponse = await axios.get(
+          `${server.absolute_url}/${server.moodle_user_profile}?email=${encodeURIComponent(userEmail)}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+        const moodleProfile = moodleResponse.data
+        window.localStorage.setItem('moodle_profile', JSON.stringify(moodleProfile))
+
+        // Use Moodle profile data if available
+        if (moodleProfile.firstname && moodleProfile.lastname) {
+          const moodleFullName = `${moodleProfile.firstname} ${moodleProfile.lastname}`
+          window.localStorage.setItem('user_data', JSON.stringify(moodleFullName))
+        }
+        if (moodleProfile.profileimageurl) {
+          window.localStorage.setItem('user_avatar', moodleProfile.profileimageurl)
+        }
+
+        console.log('Moodle profile fetched:', moodleProfile)
+      } catch (moodleError) {
+        console.warn('Could not fetch Moodle profile:', moodleError)
+        // Not critical, continue login
+      }
     } catch (error) {
       console.error('Error fetching user data:', error)
       setFeedback(error instanceof Error ? error.message : 'Unknown error')
@@ -57,9 +88,10 @@ function SectionLogin() {
       )
       .then((res) => {
         window.localStorage.setItem('auth_tokens', JSON.stringify(res.data))
+        const email = e.target[0].value
         const userInfo: authResData = jwt_decode(res.data.access)
         if (userInfo.user_id) {
-          getUserData(userInfo.user_id)
+          getUserData(userInfo.user_id, email, res.data.access)
         }
         setFeedback(null)
         setTimeout(() => {
