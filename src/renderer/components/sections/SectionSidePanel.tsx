@@ -174,12 +174,16 @@ function SectionSidePanel(props: any) {
             <div className={`flex items-center ${isPanelOpen ? 'space-x-3' : 'justify-center'}`}>
               {(() => {
                 const avatarUrl = window.localStorage.getItem('user_avatar')
-                return avatarUrl ? (
+                const [imageError, setImageError] = React.useState(false)
+
+                return avatarUrl && !imageError ? (
                   <img
                     src={avatarUrl}
                     alt={user_fname}
                     className="w-12 h-12 rounded-full object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                     title={isPanelOpen ? undefined : `${user_fname} - Chemistry Student`}
+                    onError={() => setImageError(true)}
+                    crossOrigin="anonymous"
                   />
                 ) : (
                   <div

@@ -23,6 +23,8 @@ function IndexPage(props: any) {
   const [classParameters, setClassParameters] = useState(null)
   const [classProcedure, setClassProcedure] = useState(null)
   const [classVideo, setClassVideo] = useState(null)
+  const [moodleAssignmentId, setMoodleAssignmentId] = useState<number | null>(null)
+  const [isExperimentCompleted, setIsExperimentCompleted] = useState(false)
   const [isTooltipOpen, setIsTooltipOpen] = useState(false)
   const [drawerState, setOpenDrawer] = React.useState(false)
   const [drawerVisible, setDrawerVisible] = useState(true)
@@ -49,20 +51,48 @@ function IndexPage(props: any) {
         alert('Missing user email. Please log in again.')
         return
       }
+
+      // Check if experiment is completed
+      if (!isExperimentCompleted) {
+        alert('⚠️ Please complete all experiment steps before submitting to Moodle.')
+        return
+      }
+
+      // Check if assignment ID is configured
+      if (!moodleAssignmentId) {
+        alert('This experiment is not linked to a Moodle assignment yet. Please contact your instructor.')
+        return
+      }
+
       const headers = { 'Content-Type': 'application/json', ...getAuthHeader() }
-      await axios.post(
+      const response = await axios.post(
         `${server.absolute_url}/${server.moodle_assignment_grades}`,
         {
           course_id: 9,
-          assignment_id: 1,
+          assignment_id: moodleAssignmentId,
           grades: [{ email, grade: 100, feedback: `Completed experiment: ${classTitle || 'Lab'}` }],
         },
         { headers }
       )
-      alert('Successfully submitted to Moodle!')
+
+      // Check results for errors
+      const results = response.data.results || []
+      const failed = results.filter((r: any) => r.status === 'error')
+
+      if (failed.length > 0) {
+        const errorDetail = failed[0].detail || 'Unknown error'
+        if (errorDetail.includes('not found') || errorDetail.includes('not enrolled')) {
+          alert('⚠️ You are not enrolled in the CHM 191 course on Moodle. Please contact your instructor to be added to the course.')
+        } else {
+          alert(`Failed to submit: ${errorDetail}`)
+        }
+      } else {
+        alert('✅ Successfully submitted to Moodle!')
+      }
     } catch (e: any) {
       console.error(e)
-      alert(e?.response?.data?.detail || 'Failed to submit to Moodle. Please try again.')
+      const errorMsg = e?.response?.data?.detail || e?.message || 'Failed to submit to Moodle. Please try again.'
+      alert(errorMsg)
     }
   }
 
@@ -118,6 +148,8 @@ function IndexPage(props: any) {
           setClassParameters(res.data.data.parameters)
           setClassTitle(res.data.data.title)
           setClassVideo(res.data.data.video_file)
+          // Safely handle moodle_assignment_id even if field doesn't exist yet
+          setMoodleAssignmentId(res.data.data.moodle_assignment_id || 1) // Default to 1 for now
         })
         .catch((err) => {
           console.error('Error fetching workbench:', err)
@@ -189,11 +221,30 @@ function IndexPage(props: any) {
                       {/* Instructor: {classInstructor} */}
                     </Typography>
                   </div>
-                  <div className="flex gap-2 ml-auto">
+                  <div className="flex gap-2 ml-auto items-center">
+                    {!isExperimentCompleted && (
+                      <span className="text-sm text-gray-600 bg-yellow-50 px-3 py-1 rounded-full border border-yellow-200">
+                        ⚠️ Complete all steps to submit
+                      </span>
+                    )}
+                    {isExperimentCompleted && (
+                      <span className="text-sm text-green-700 bg-green-50 px-3 py-1 rounded-full border border-green-200">
+                        ✅ Experiment Complete
+                      </span>
+                    )}
                     <button
-                      className="text-lg bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 my-1 rounded-lg border shadow-lg"
+                      className={`text-lg font-semibold px-4 py-2 my-1 rounded-lg border shadow-lg transition-all ${
+                        isExperimentCompleted
+                          ? 'bg-blue-500 hover:bg-blue-600 text-white cursor-pointer'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-60'
+                      }`}
                       onClick={submitToMoodle}
-                      title="Submit completion to Moodle"
+                      disabled={!isExperimentCompleted}
+                      title={
+                        isExperimentCompleted
+                          ? 'Submit completion to Moodle'
+                          : 'Complete all experiment steps first'
+                      }
                     >
                       📤 Submit to Moodle
                     </button>
@@ -225,6 +276,7 @@ function IndexPage(props: any) {
                 <AnimationBox
                   procedure={classProcedure}
                   panel={drawerVisible}
+                  onExperimentComplete={setIsExperimentCompleted}
                 />
                 <InstructionsPanel
                   isOpen={drawerVisible}

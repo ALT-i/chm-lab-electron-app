@@ -13,7 +13,7 @@ interface Item {
 }
 
 function AnimationBox(props: any) {
-  const { procedure: procedureSteps, panel } = props
+  const { procedure: procedureSteps, panel, onExperimentComplete } = props
   const [contextMenu, setContextMenu] = useState({
     visible: false,
     x: 0,
@@ -252,6 +252,7 @@ function AnimationBox(props: any) {
                     setIsCalculating(false)
                     setCurrentStepIndex(currentStepIndex + 1)
                     setIsExperimentCompleted(true)
+                    if (onExperimentComplete) onExperimentComplete(true)
                     showModal(
                       `Experiment Complete!`,
                       `You've successfully completed the experiment and have achieved the final result of ${item?.name}. You can clear the
@@ -280,6 +281,7 @@ function AnimationBox(props: any) {
                 setIsCalculating(false)
                 setCurrentStepIndex(currentStepIndex + 1)
                 setIsExperimentCompleted(true)
+                if (onExperimentComplete) onExperimentComplete(true)
                 showModal(
                   `Experiment Complete!`,
                   `You've successfully completed the experiment and have achieved the final result of ${item?.name}. You can clear the
