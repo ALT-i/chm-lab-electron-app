@@ -4,6 +4,13 @@ import TokenizeFormula from '../Formula'
 import ContextMenu from '../ContextMenu'
 import SimpleModal from '../SimpleModal'
 import VolumeInputDialog from '../VolumeInputDialog'
+import {
+  getCapacity,
+  getContents,
+  getPourLimits,
+  pickContainer,
+  toCm3,
+} from '../../utils/lab-measurements'
 
 interface Item {
   type: string
@@ -37,7 +44,9 @@ function AnimationBox(props: any) {
     onConfirm: null,
     onCancel: null,
     maxVolume: 0,
-    recommendedVolume: 0,
+    recommendedVolume: 0 as number | null,
+    capacity: null as number | null,
+    contents: 0,
   })
   const [mergeImageSrc, setMergeImageSrc] = useState('')
 
@@ -197,6 +206,12 @@ function AnimationBox(props: any) {
     setIsCalculating(true)
     console.log('Merging', item1, item2)
     setTimeout(() => {
+      // The result keeps the container's capacity and accumulates its contents (cm³)
+      const container = pickContainer(item1, item2, mergeRule)
+      const other = container === item1 ? item2 : item1
+      const capacity = getCapacity(container) ?? getCapacity(other)
+      const contents =
+        getContents(item1) + getContents(item2) + (toCm3(volume, unit) || 0)
       setDroppedItems((currentItems) => {
         const filteredItems = currentItems.filter(
           (item) => item.id !== item1.id && item.id !== item2.id
@@ -213,6 +228,8 @@ function AnimationBox(props: any) {
           image: mergeRule.result.image,
           volume: volume,
           unit: unit,
+          capacity: capacity,
+          contents: contents,
         }
         return [...filteredItems, mergedItem]
       })
@@ -240,8 +257,11 @@ function AnimationBox(props: any) {
 
             if (currentItem.type === 'SUBSTANCE' || item.type === 'SUBSTANCE') {
               console.log('SUBSTANCE dropped, opening volume dialog')
-              const maxVolume = 500 // Set this to the appropriate maximum volume
-              const recommendedVolume = 200 // Set this to the appropriate recommended volume
+              const { maxVolume, recommendedVolume, capacity, contents } =
+                getPourLimits(
+                  pickContainer(currentItem, item, mergeRule),
+                  mergeRule
+                )
               setVolumeDialogData({
                 isOpen: true,
                 onConfirm: (volume, unit) => {
@@ -271,6 +291,8 @@ function AnimationBox(props: any) {
                 },
                 maxVolume: maxVolume,
                 recommendedVolume: recommendedVolume,
+                capacity: capacity,
+                contents: contents,
               })
             } else {
               setTimeout(
@@ -485,6 +507,8 @@ function AnimationBox(props: any) {
         onConfirm={volumeDialogData.onConfirm}
         maxVolume={volumeDialogData.maxVolume}
         recommendedVolume={volumeDialogData.recommendedVolume}
+        capacity={volumeDialogData.capacity}
+        contents={volumeDialogData.contents}
       />
       {contextMenu.visible && (
         <ContextMenu
