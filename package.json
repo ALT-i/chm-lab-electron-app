@@ -13,6 +13,7 @@
   "scripts": {
     "start": "electron-vite preview",
     "dev": "cross-env NODE_ENV=development electron-vite dev --watch",
+    "test": "node --test \"src/**/*.test.mjs\"",
     "compile:app": "electron-vite build",
     "compile:packageJSON": "node ./bin/modules/postbuild/index.js",
     "prebuild": "run-s compile:app compile:packageJSON",

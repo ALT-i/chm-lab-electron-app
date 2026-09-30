@@ -1,6 +1,7 @@
 import { useDrag } from 'react-dnd'
 import TokenizeFormula from '../Formula'
 import React, { useState } from 'react'
+import { formatSubstanceLabel } from '../../utils/lab-measurements'
 
 interface DraggableItemProps {
   item: {
@@ -56,6 +57,9 @@ function DraggableItem({ item, type, onRightClick }: DraggableItemProps) {
           {item.name}
           {type === 'SUBSTANCE' && <TokenizeFormula formula={item.formula} />}
         </p>
+        {type === 'SUBSTANCE' && formatSubstanceLabel(item) && (
+          <p className="text-xs text-gray-600">{formatSubstanceLabel(item)}</p>
+        )}
       </div>
     </div>
   )
