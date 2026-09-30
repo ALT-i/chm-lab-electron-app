@@ -7,6 +7,7 @@ const VolumeInputDialog = ({
   onConfirm,
   maxVolume,
   recommendedVolume,
+  phValue = null,
 }) => {
   const [volume, setVolume] = useState(0)
   const [unit, setUnit] = useState('cm³')
@@ -38,8 +39,10 @@ const VolumeInputDialog = ({
               maxVolume={maxVolume}
               unit={unit}
               isOverRecommended={isOverRecommended}
+              phValue={phValue}
             />
           </div>
+
           <div>
             <input
               type="number"

@@ -1,6 +1,13 @@
 import React, { useEffect, useRef } from 'react'
 
-const BeakerGauge = ({ volume, maxVolume, unit, isOverRecommended }) => {
+const BeakerGauge = ({
+  volume,
+  maxVolume,
+  unit,
+  isOverRecommended,
+  phValue = null,
+}) => {
+
   const fillPercentage = (volume / maxVolume) * 100
   const fillHeight = 120 * (fillPercentage / 100)
   const waveColor = isOverRecommended ? '#ff5555' : '#178BCA'
@@ -73,12 +80,26 @@ const BeakerGauge = ({ volume, maxVolume, unit, isOverRecommended }) => {
       </g>
 
       {/* Text */}
-      <text x="40" y="80" textAnchor="middle" fill="#444" fontFamily="Arial">
+      <text
+        x="40"
+        y={phValue != null ? '72' : '80'}
+        textAnchor="middle"
+        fill="#444"
+        fontFamily="Arial"
+      >
         <tspan fontSize="14">{Math.round(volume)}</tspan>
-        <tspan fontSize="8" dy="10">{unit}</tspan>
+        <tspan fontSize="8" dy="10">
+          {unit}
+        </tspan>
+        {phValue != null && (
+          <tspan x="40" dy="12" fontSize="9" fill="#1e40af" fontWeight="bold">
+            pH {Number(phValue).toFixed(1)}
+          </tspan>
+        )}
       </text>
     </svg>
   )
 }
 
 export default BeakerGauge
+
