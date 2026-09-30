@@ -9,6 +9,7 @@ const server = {
   user: 'api/v1/users',
   workbench: 'api/v1/workbench',
   workspace: 'api/v1/workspace/lessons',
+  sessions: 'api/v1/workspace/sessions/',
   moodle_students: 'api/v1/moodle/students/',
   moodle_user_profile: 'api/v1/moodle/user/profile/',
   moodle_assignment_grades: 'api/v1/moodle/grades/assignment/',
