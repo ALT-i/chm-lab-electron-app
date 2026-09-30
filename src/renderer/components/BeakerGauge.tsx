@@ -1,7 +1,16 @@
 import React, { useEffect, useRef } from 'react'
+import { formatNumber, formatWithPrecision } from '../utils/lab-measurements'
 
-const BeakerGauge = ({ volume, maxVolume, unit, isOverRecommended }) => {
-  const fillPercentage = (volume / maxVolume) * 100
+// volume: amount being poured; contents: amount already in the container (same unit)
+const BeakerGauge = ({
+  volume,
+  maxVolume,
+  unit,
+  isOverRecommended,
+  contents = 0,
+  precision = null,
+}) => {
+  const fillPercentage = Math.min(((contents + volume) / maxVolume) * 100, 100)
   const fillHeight = 120 * (fillPercentage / 100)
   const waveColor = isOverRecommended ? '#ff5555' : '#178BCA'
   const canvasRef = useRef(null)
@@ -73,9 +82,22 @@ const BeakerGauge = ({ volume, maxVolume, unit, isOverRecommended }) => {
       </g>
 
       {/* Text */}
-      <text x="40" y="80" textAnchor="middle" fill="#444" fontFamily="Arial">
-        <tspan fontSize="14">{Math.round(volume)}</tspan>
-        <tspan fontSize="8" dy="10">{unit}</tspan>
+      <text x="40" y="72" textAnchor="middle" fill="#444" fontFamily="Arial">
+        <tspan fontSize="14">
+          {precision != null
+            ? formatWithPrecision(volume, precision)
+            : formatNumber(volume)}
+        </tspan>
+        <tspan fontSize="8" dx="2">
+          {unit}
+        </tspan>
+        <tspan x="40" dy="14" fontSize="8">
+          of{' '}
+          {precision != null
+            ? formatWithPrecision(maxVolume, precision)
+            : formatNumber(maxVolume)}{' '}
+          {unit}
+        </tspan>
       </text>
     </svg>
   )
