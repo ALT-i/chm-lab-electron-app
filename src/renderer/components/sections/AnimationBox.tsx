@@ -4,16 +4,45 @@ import TokenizeFormula from '../Formula'
 import ContextMenu from '../ContextMenu'
 import SimpleModal from '../SimpleModal'
 import VolumeInputDialog from '../VolumeInputDialog'
+import {
+  calculateReactionApi,
+  formatReactionFeedback,
+} from '../../utils/lab-reactions'
+import {
+  applyReadingError,
+  evaluatePourTolerance,
+  formatWithPrecision,
+  getCapacity,
+  getContents,
+  getInstrumentPrecision,
+  getPourLimits,
+  pickContainer,
+  toCm3,
+} from '../../utils/lab-measurements'
+import {
+  calculateSessionGrade,
+  MeasurementRecord,
+  SessionTelemetry,
+  GradeEvaluation,
+} from '../../utils/lab-grading'
+
 
 interface Item {
   type: string
   id: string
   image: string
   position: { x: number; y: number }
+  formula?: string
+  phValue?: number
+  molarity?: number
+  name?: string
+  displayName?: string
+  volume?: number
 }
 
 function AnimationBox(props: any) {
-  const { procedure: procedureSteps, panel, onExperimentComplete } = props
+  const { procedure: procedureSteps, panel, onExperimentComplete, substances } = props
+
   const [contextMenu, setContextMenu] = useState({
     visible: false,
     x: 0,
@@ -34,12 +63,19 @@ function AnimationBox(props: any) {
   const [isExperimentCompleted, setIsExperimentCompleted] = useState(false)
   const [volumeDialogData, setVolumeDialogData] = useState({
     isOpen: false,
-    onConfirm: null,
-    onCancel: null,
-    maxVolume: 0,
-    recommendedVolume: 0,
+    onConfirm: null as any,
+    onCancel: null as any,
+    maxVolume: null as number | null,
+    recommendedVolume: 0 as number | null,
+    capacity: null as number | null,
+    contents: 0,
+    precision: 0.5 as number,
+    instrumentName: '' as string,
+    phValue: null as number | null,
   })
   const [mergeImageSrc, setMergeImageSrc] = useState('')
+  const measurementsRef = useRef<MeasurementRecord[]>([])
+  const startTimeRef = useRef<number>(Date.now())
 
   const backgroundImages = [
     'url("./real_chemLab_bg.jpg")',
@@ -193,18 +229,73 @@ function AnimationBox(props: any) {
     [dragging, currentItem, offset]
   )
 
-  const mergeItems = useCallback((item1, item2, mergeRule, volume, unit) => {
-    setIsCalculating(true)
-    console.log('Merging', item1, item2)
-    setTimeout(() => {
+  const mergeItems = useCallback(
+    async (item1, item2, mergeRule, volume, unit, precision = 0.5) => {
+      setIsCalculating(true)
+      console.log('Merging', item1, item2)
+
+      let reactionResult = null
+      let finalPh = item1?.phValue ?? item2?.phValue ?? null
+
+      if (mergeRule?.reaction) {
+        try {
+          const reactants = (mergeRule.reaction.reactants || []).map(
+            (formula: string) => {
+              const matchingItem =
+                [item1, item2].find(
+                  (it) => it?.formula === formula || it?.name?.includes(formula)
+                ) ||
+                (substances || []).find(
+                  (s: any) => s.formula === formula || s.name?.includes(formula)
+                )
+
+              const isPoured =
+                matchingItem?.id === item1?.id || matchingItem?.name === item1?.name
+              const vol = isPoured ? (volume || 25) : (matchingItem?.volume || 25)
+              const mol = matchingItem?.molarity ?? 0.1
+
+              return {
+                formula,
+                volume: Number(vol),
+                molarity: Number(mol),
+              }
+            }
+          )
+
+          const payload = {
+            reactants,
+            products: mergeRule.reaction.products || [],
+            reaction_type: mergeRule.reaction.type || 'neutralization',
+          }
+
+          reactionResult = await calculateReactionApi(payload)
+          if (reactionResult?.final_ph != null) {
+            finalPh = reactionResult.final_ph
+          }
+        } catch (err) {
+          console.warn('Reaction calculation error:', err)
+        }
+      }
+
+      // The result keeps the container's capacity and accumulates its contents (cm³)
+      const container = pickContainer(item1, item2, mergeRule)
+      const other = container === item1 ? item2 : item1
+      const capacity = getCapacity(container) ?? getCapacity(other)
+      const contents =
+        getContents(item1) + getContents(item2) + (toCm3(volume, unit) || 0)
+
       setDroppedItems((currentItems) => {
         const filteredItems = currentItems.filter(
           (item) => item.id !== item1.id && item.id !== item2.id
         )
+        const formattedVolume = formatWithPrecision(volume, precision)
         const mergedItem = {
           id: `merged-${Date.now()}`,
           name: mergeRule.result.name, // Keep the original name for matching
-          displayName: `${volume} ${unit} of ${mergeRule.result.name}`, // Add a display name
+          displayName:
+            volume > 0
+              ? `${formattedVolume} ${unit} of ${mergeRule.result.name}`
+              : mergeRule.result.name,
           type: item1.type,
           position: {
             x: (item1.position.x + item2.position.x) / 2,
@@ -213,12 +304,24 @@ function AnimationBox(props: any) {
           image: mergeRule.result.image,
           volume: volume,
           unit: unit,
+          capacity: capacity,
+          contents: contents,
+          precision: precision,
+          phValue: finalPh,
+          reactionResult: reactionResult,
         }
         return [...filteredItems, mergedItem]
       })
+
       setIsCalculating(false)
-    }, 1000)
-  }, [])
+
+      if (reactionResult) {
+        const feedback = formatReactionFeedback(reactionResult)
+        showModal('Chemical Reaction Occurred!', mergeRule.result.name, feedback)
+      }
+    },
+    [substances, showModal]
+  )
 
   const endDrag = useCallback(() => {
     setDragging(false)
@@ -240,23 +343,119 @@ function AnimationBox(props: any) {
 
             if (currentItem.type === 'SUBSTANCE' || item.type === 'SUBSTANCE') {
               console.log('SUBSTANCE dropped, opening volume dialog')
-              const maxVolume = 500 // Set this to the appropriate maximum volume
-              const recommendedVolume = 200 // Set this to the appropriate recommended volume
+              const container = pickContainer(currentItem, item, mergeRule)
+              const measuringTool =
+                container?.type === 'TOOL'
+                  ? container
+                  : item.type === 'TOOL'
+                  ? item
+                  : currentItem
+              const precision = getInstrumentPrecision(measuringTool)
+              const { maxVolume, recommendedVolume, capacity, contents } =
+                getPourLimits(container, mergeRule)
+
               setVolumeDialogData({
                 isOpen: true,
                 onConfirm: (volume, unit) => {
+                  const volumeCm3 = toCm3(volume, unit)
+
+                  // Tolerance evaluation against recommended volume if specified
+                  if (recommendedVolume != null) {
+                    const tolerance = mergeRule?.tolerance ?? precision
+                    const evalResult = evaluatePourTolerance(
+                      volumeCm3,
+                      recommendedVolume,
+                      tolerance
+                    )
+
+                    if (!evalResult.isAcceptable) {
+                      setVolumeDialogData((prev) => ({ ...prev, isOpen: false }))
+                      showModal(
+                        `Measurement Outside Tolerance!`,
+                        `${currentStep?.description}`,
+                        `You poured ${formatWithPrecision(
+                          volume,
+                          precision
+                        )} ${unit} (${formatWithPrecision(
+                          volumeCm3,
+                          precision
+                        )} cm³), but this step requires ${formatWithPrecision(
+                          recommendedVolume,
+                          precision
+                        )} cm³ (acceptable range: ${formatWithPrecision(
+                          evalResult.minAcceptable,
+                          precision
+                        )} – ${formatWithPrecision(
+                          evalResult.maxAcceptable,
+                          precision
+                        )} cm³, tolerance ±${formatWithPrecision(
+                          tolerance,
+                          precision
+                        )} cm³). Please adjust your measurement and try again.`
+                      )
+                      return
+                    }
+                  }
+
+                  // Reading error / meniscus jitter
+                  const recordedCm3 = applyReadingError(volumeCm3, precision)
+                  const recordedVolume =
+                    unit === 'dm³' ? recordedCm3 / 1000 : recordedCm3
+
                   setVolumeDialogData((prev) => ({ ...prev, isOpen: false }))
-                  console.log('Merging items with volume:', volume, unit)
-                  mergeItems(currentItem, item, mergeRule, volume, unit)
+                  console.log(
+                    'Merging items with recorded volume:',
+                    recordedVolume,
+                    unit
+                  )
+                  // Record telemetry measurement
+                  const record: MeasurementRecord = {
+                    stepIndex: currentStepIndex,
+                    description: currentStep?.description,
+                    apparatusName: measuringTool?.name || container?.name || '',
+                    substanceName: currentItem?.name || item?.name || '',
+                    targetVolume: recommendedVolume != null ? recommendedVolume : undefined,
+                    inputVolume: volumeCm3,
+                    recordedVolume: recordedCm3,
+                    unit: unit,
+                    precision: precision,
+                    tolerance: mergeRule?.tolerance ?? precision,
+                    isAcceptable: true,
+                    difference: recommendedVolume != null ? recordedCm3 - recommendedVolume : 0,
+                    timestamp: Date.now(),
+                    phValue: currentItem?.phValue ?? item?.phValue ?? null,
+                  }
+                  const updatedMeasurements = [...measurementsRef.current, record]
+                  measurementsRef.current = updatedMeasurements
+
+                  mergeItems(
+                    currentItem,
+                    item,
+                    mergeRule,
+                    recordedVolume,
+                    unit,
+                    precision
+                  )
+
                   if (currentStepIndex === procedureSteps.steps.length - 1) {
+                    const dynamicGrade = calculateSessionGrade(updatedMeasurements)
+                    const telemetry: SessionTelemetry = {
+                      lessonId: props.lessonId || '',
+                      startedAt: startTimeRef.current,
+                      completedAt: Date.now(),
+                      measurements: updatedMeasurements,
+                      totalSteps: procedureSteps.steps.length,
+                      completedSteps: procedureSteps.steps.length,
+                      grading: dynamicGrade,
+                    }
                     setIsCalculating(false)
                     setCurrentStepIndex(currentStepIndex + 1)
                     setIsExperimentCompleted(true)
-                    if (onExperimentComplete) onExperimentComplete(true)
+                    if (onExperimentComplete) onExperimentComplete(true, telemetry, dynamicGrade)
                     showModal(
                       `Experiment Complete!`,
-                      `You've successfully completed the experiment and have achieved the final result of ${item?.name}. You can clear the
-                      workbench to restart the experiment!`
+                      `You've successfully completed the experiment! Dynamic Grade: ${dynamicGrade.overallGrade}% (Accuracy: ${dynamicGrade.averageTargetAdherence}%, Precision: ${dynamicGrade.averagePrecisionAdherence}%).`,
+                      `Final product: ${item?.name || 'Completed'}. You can now submit your dynamic grade to Moodle!`
                     )
                   } else {
                     setCurrentStepIndex(currentStepIndex + 1)
@@ -270,22 +469,54 @@ function AnimationBox(props: any) {
                   setVolumeDialogData((prev) => ({ ...prev, isOpen: false }))
                 },
                 maxVolume: maxVolume,
-                recommendedVolume: recommendedVolume,
+                capacity: capacity,
+                contents: contents,
+                precision: precision,
+                instrumentName: measuringTool?.name || '',
+                phValue: currentItem?.phValue ?? item?.phValue ?? null,
               })
             } else {
+              const record: MeasurementRecord = {
+                stepIndex: currentStepIndex,
+                description: currentStep?.description,
+                apparatusName: item?.name || '',
+                substanceName: currentItem?.name || '',
+                targetVolume: undefined,
+                inputVolume: 0,
+                recordedVolume: 0,
+                unit: 'cm³',
+                precision: 0,
+                tolerance: 0,
+                isAcceptable: true,
+                difference: 0,
+                timestamp: Date.now(),
+              }
+              const updatedMeasurements = [...measurementsRef.current, record]
+              measurementsRef.current = updatedMeasurements
+
               setTimeout(
                 () => mergeItems(currentItem, item, mergeRule, 0, 'cm³'),
                 500
               )
               if (currentStepIndex === procedureSteps.steps.length - 1) {
+                const dynamicGrade = calculateSessionGrade(updatedMeasurements)
+                const telemetry: SessionTelemetry = {
+                  lessonId: props.lessonId || '',
+                  startedAt: startTimeRef.current,
+                  completedAt: Date.now(),
+                  measurements: updatedMeasurements,
+                  totalSteps: procedureSteps.steps.length,
+                  completedSteps: procedureSteps.steps.length,
+                  grading: dynamicGrade,
+                }
                 setIsCalculating(false)
                 setCurrentStepIndex(currentStepIndex + 1)
                 setIsExperimentCompleted(true)
-                if (onExperimentComplete) onExperimentComplete(true)
+                if (onExperimentComplete) onExperimentComplete(true, telemetry, dynamicGrade)
                 showModal(
                   `Experiment Complete!`,
-                  `You've successfully completed the experiment and have achieved the final result of ${item?.name}. You can clear the
-                  workbench to restart the experiment!`
+                  `You've successfully completed the experiment! Dynamic Grade: ${dynamicGrade.overallGrade}% (Accuracy: ${dynamicGrade.averageTargetAdherence}%, Precision: ${dynamicGrade.averagePrecisionAdherence}%).`,
+                  `Final product: ${item?.name || 'Completed'}. You can now submit your dynamic grade to Moodle!`
                 )
               } else {
                 setCurrentStepIndex(currentStepIndex + 1)
@@ -453,6 +684,11 @@ function AnimationBox(props: any) {
             <p className="text-sm font-medium[] truncate text-center">
               {item.displayName || item.name}
               {item?.formula && <TokenizeFormula formula={item?.formula} />}
+              {item?.phValue != null && (
+                <span className="ml-1 text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-mono">
+                  pH {Number(item.phValue).toFixed(1)}
+                </span>
+              )}
             </p>
           </div>
         ))
@@ -466,6 +702,10 @@ function AnimationBox(props: any) {
           onClick={() => {
             setCurrentStepIndex(0)
             setDroppedItems([])
+            setIsExperimentCompleted(false)
+            measurementsRef.current = []
+            startTimeRef.current = Date.now()
+            if (onExperimentComplete) onExperimentComplete(false)
           }}
           className="border-green-500 text-green-500 bg-gray-100 mx-1 px-4 py-2 text-lg rounded cursor-pointer shadow transition-all hover:bg-green-500 hover:text-white hover:shadow-lg"
         >
@@ -484,7 +724,11 @@ function AnimationBox(props: any) {
         onClose={volumeDialogData.onCancel}
         onConfirm={volumeDialogData.onConfirm}
         maxVolume={volumeDialogData.maxVolume}
-        recommendedVolume={volumeDialogData.recommendedVolume}
+        capacity={volumeDialogData.capacity}
+        contents={volumeDialogData.contents}
+        precision={volumeDialogData.precision}
+        instrumentName={volumeDialogData.instrumentName}
+        phValue={volumeDialogData.phValue}
       />
       {contextMenu.visible && (
         <ContextMenu

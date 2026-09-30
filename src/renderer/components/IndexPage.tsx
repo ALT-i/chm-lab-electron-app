@@ -5,6 +5,11 @@ import { Typography, IconButton, Button } from '@material-tailwind/react'
 
 import server from '../utils'
 import { getAuthHeader } from '../utils/index'
+import {
+  persistSessionTelemetry,
+  SessionTelemetry,
+  GradeEvaluation,
+} from '../utils/lab-grading'
 import SectionSidePanel from './sections/SectionSidePanel'
 import ProgressChartDisplay from './sections/ProgressChartDisplay'
 import AnimationBox from './sections/AnimationBox'
@@ -25,9 +30,25 @@ function IndexPage(props: any) {
   const [classVideo, setClassVideo] = useState(null)
   const [moodleAssignmentId, setMoodleAssignmentId] = useState<number | null>(null)
   const [isExperimentCompleted, setIsExperimentCompleted] = useState(false)
+  const [sessionTelemetry, setSessionTelemetry] = useState<SessionTelemetry | null>(null)
+  const [dynamicGrade, setDynamicGrade] = useState<GradeEvaluation | null>(null)
   const [isTooltipOpen, setIsTooltipOpen] = useState(false)
   const [drawerState, setOpenDrawer] = React.useState(false)
   const [drawerVisible, setDrawerVisible] = useState(true)
+
+  const handleExperimentComplete = (
+    completed: boolean,
+    telemetry?: SessionTelemetry,
+    grade?: GradeEvaluation
+  ) => {
+    setIsExperimentCompleted(completed)
+    if (telemetry) setSessionTelemetry(telemetry)
+    if (grade) setDynamicGrade(grade)
+    if (!completed) {
+      setSessionTelemetry(null)
+      setDynamicGrade(null)
+    }
+  }
 
   const togglePanel = () => {
     setDrawerVisible(!drawerVisible)
@@ -64,13 +85,46 @@ function IndexPage(props: any) {
         return
       }
 
+      const gradeValue = dynamicGrade?.overallGrade ?? 100
+      const feedbackText = dynamicGrade?.feedback
+        ? `${classTitle || 'Lab'} - ${dynamicGrade.feedback}`
+        : `Completed experiment: ${classTitle || 'Lab'}`
+
+      // 1. Persist telemetry and measurements to backend API
+      let persistedSessionId = sessionTelemetry?.sessionId
+      if (class_id) {
+        try {
+          const sessionPayload = {
+            telemetry: sessionTelemetry,
+            dynamicGrade,
+            completedAt: Date.now(),
+          }
+          const sessionRes = await persistSessionTelemetry(class_id, sessionPayload, persistedSessionId)
+          if (sessionRes?.data?.id || sessionRes?.id) {
+            persistedSessionId = sessionRes?.data?.id || sessionRes?.id
+          }
+        } catch (err) {
+          console.warn('Could not persist session telemetry to backend:', err)
+        }
+      }
+
+      // 2. Submit dynamic grade to Moodle
       const headers = { 'Content-Type': 'application/json', ...getAuthHeader() }
+      const gradeEntry: any = {
+        email,
+        grade: gradeValue,
+        feedback: feedbackText,
+      }
+      if (persistedSessionId) {
+        gradeEntry.session_id = persistedSessionId
+      }
+
       const response = await axios.post(
         `${server.absolute_url}/${server.moodle_assignment_grades}`,
         {
           course_id: 9,
           assignment_id: moodleAssignmentId,
-          grades: [{ email, grade: 100, feedback: `Completed experiment: ${classTitle || 'Lab'}` }],
+          grades: [gradeEntry],
         },
         { headers }
       )
@@ -87,7 +141,9 @@ function IndexPage(props: any) {
           alert(`Failed to submit: ${errorDetail}`)
         }
       } else {
-        alert('✅ Successfully submitted to Moodle!')
+        alert(
+          `✅ Successfully submitted to Moodle!\nDynamic Grade: ${gradeValue}%\n${feedbackText}`
+        )
       }
     } catch (e: any) {
       console.error(e)
@@ -228,8 +284,13 @@ function IndexPage(props: any) {
                       </span>
                     )}
                     {isExperimentCompleted && (
-                      <span className="text-sm text-green-700 bg-green-50 px-3 py-1 rounded-full border border-green-200">
-                        ✅ Experiment Complete
+                      <span className="text-sm text-green-700 bg-green-50 px-3 py-1 rounded-full border border-green-200 flex items-center gap-1.5 shadow-sm">
+                        <span>✅ Complete</span>
+                        {dynamicGrade && (
+                          <span className="font-semibold text-green-900 bg-green-100 px-2 py-0.5 rounded text-xs">
+                            Grade: {dynamicGrade.overallGrade}%
+                          </span>
+                        )}
                       </span>
                     )}
                     <button
@@ -276,8 +337,11 @@ function IndexPage(props: any) {
                 <AnimationBox
                   procedure={classProcedure}
                   panel={drawerVisible}
-                  onExperimentComplete={setIsExperimentCompleted}
+                  substances={substances}
+                  lessonId={class_id}
+                  onExperimentComplete={handleExperimentComplete}
                 />
+
                 <InstructionsPanel
                   isOpen={drawerVisible}
                   closeDrawer={togglePanel}
