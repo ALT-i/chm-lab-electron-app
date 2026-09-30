@@ -5,8 +5,12 @@ import ContextMenu from '../ContextMenu'
 import SimpleModal from '../SimpleModal'
 import VolumeInputDialog from '../VolumeInputDialog'
 import {
+  applyReadingError,
+  evaluatePourTolerance,
+  formatWithPrecision,
   getCapacity,
   getContents,
+  getInstrumentPrecision,
   getPourLimits,
   pickContainer,
   toCm3,
@@ -47,6 +51,8 @@ function AnimationBox(props: any) {
     recommendedVolume: 0 as number | null,
     capacity: null as number | null,
     contents: 0,
+    precision: 0.5 as number,
+    instrumentName: '' as string,
   })
   const [mergeImageSrc, setMergeImageSrc] = useState('')
 
@@ -202,40 +208,48 @@ function AnimationBox(props: any) {
     [dragging, currentItem, offset]
   )
 
-  const mergeItems = useCallback((item1, item2, mergeRule, volume, unit) => {
-    setIsCalculating(true)
-    console.log('Merging', item1, item2)
-    setTimeout(() => {
-      // The result keeps the container's capacity and accumulates its contents (cm³)
-      const container = pickContainer(item1, item2, mergeRule)
-      const other = container === item1 ? item2 : item1
-      const capacity = getCapacity(container) ?? getCapacity(other)
-      const contents =
-        getContents(item1) + getContents(item2) + (toCm3(volume, unit) || 0)
-      setDroppedItems((currentItems) => {
-        const filteredItems = currentItems.filter(
-          (item) => item.id !== item1.id && item.id !== item2.id
-        )
-        const mergedItem = {
-          id: `merged-${Date.now()}`,
-          name: mergeRule.result.name, // Keep the original name for matching
-          displayName: `${volume} ${unit} of ${mergeRule.result.name}`, // Add a display name
-          type: item1.type,
-          position: {
-            x: (item1.position.x + item2.position.x) / 2,
-            y: (item1.position.y + item2.position.y) / 2,
-          },
-          image: mergeRule.result.image,
-          volume: volume,
-          unit: unit,
-          capacity: capacity,
-          contents: contents,
-        }
-        return [...filteredItems, mergedItem]
-      })
-      setIsCalculating(false)
-    }, 1000)
-  }, [])
+  const mergeItems = useCallback(
+    (item1, item2, mergeRule, volume, unit, precision = 0.5) => {
+      setIsCalculating(true)
+      console.log('Merging', item1, item2)
+      setTimeout(() => {
+        // The result keeps the container's capacity and accumulates its contents (cm³)
+        const container = pickContainer(item1, item2, mergeRule)
+        const other = container === item1 ? item2 : item1
+        const capacity = getCapacity(container) ?? getCapacity(other)
+        const contents =
+          getContents(item1) + getContents(item2) + (toCm3(volume, unit) || 0)
+        setDroppedItems((currentItems) => {
+          const filteredItems = currentItems.filter(
+            (item) => item.id !== item1.id && item.id !== item2.id
+          )
+          const formattedVolume = formatWithPrecision(volume, precision)
+          const mergedItem = {
+            id: `merged-${Date.now()}`,
+            name: mergeRule.result.name, // Keep the original name for matching
+            displayName:
+              volume > 0
+                ? `${formattedVolume} ${unit} of ${mergeRule.result.name}`
+                : mergeRule.result.name,
+            type: item1.type,
+            position: {
+              x: (item1.position.x + item2.position.x) / 2,
+              y: (item1.position.y + item2.position.y) / 2,
+            },
+            image: mergeRule.result.image,
+            volume: volume,
+            unit: unit,
+            capacity: capacity,
+            contents: contents,
+            precision: precision,
+          }
+          return [...filteredItems, mergedItem]
+        })
+        setIsCalculating(false)
+      }, 1000)
+    },
+    []
+  )
 
   const endDrag = useCallback(() => {
     setDragging(false)
@@ -257,17 +271,80 @@ function AnimationBox(props: any) {
 
             if (currentItem.type === 'SUBSTANCE' || item.type === 'SUBSTANCE') {
               console.log('SUBSTANCE dropped, opening volume dialog')
+              const container = pickContainer(currentItem, item, mergeRule)
+              const measuringTool =
+                container?.type === 'TOOL'
+                  ? container
+                  : item.type === 'TOOL'
+                  ? item
+                  : currentItem
+              const precision = getInstrumentPrecision(measuringTool)
               const { maxVolume, recommendedVolume, capacity, contents } =
-                getPourLimits(
-                  pickContainer(currentItem, item, mergeRule),
-                  mergeRule
-                )
+                getPourLimits(container, mergeRule)
+
               setVolumeDialogData({
                 isOpen: true,
                 onConfirm: (volume, unit) => {
+                  const volumeCm3 = toCm3(volume, unit)
+
+                  // Tolerance evaluation against recommended volume if specified
+                  if (recommendedVolume != null) {
+                    const tolerance = mergeRule?.tolerance ?? precision
+                    const evalResult = evaluatePourTolerance(
+                      volumeCm3,
+                      recommendedVolume,
+                      tolerance
+                    )
+
+                    if (!evalResult.isAcceptable) {
+                      setVolumeDialogData((prev) => ({ ...prev, isOpen: false }))
+                      showModal(
+                        `Measurement Outside Tolerance!`,
+                        `${currentStep?.description}`,
+                        `You poured ${formatWithPrecision(
+                          volume,
+                          precision
+                        )} ${unit} (${formatWithPrecision(
+                          volumeCm3,
+                          precision
+                        )} cm³), but this step requires ${formatWithPrecision(
+                          recommendedVolume,
+                          precision
+                        )} cm³ (acceptable range: ${formatWithPrecision(
+                          evalResult.minAcceptable,
+                          precision
+                        )} – ${formatWithPrecision(
+                          evalResult.maxAcceptable,
+                          precision
+                        )} cm³, tolerance ±${formatWithPrecision(
+                          tolerance,
+                          precision
+                        )} cm³). Please adjust your measurement and try again.`
+                      )
+                      return
+                    }
+                  }
+
+                  // Reading error / meniscus jitter
+                  const recordedCm3 = applyReadingError(volumeCm3, precision)
+                  const recordedVolume =
+                    unit === 'dm³' ? recordedCm3 / 1000 : recordedCm3
+
                   setVolumeDialogData((prev) => ({ ...prev, isOpen: false }))
-                  console.log('Merging items with volume:', volume, unit)
-                  mergeItems(currentItem, item, mergeRule, volume, unit)
+                  console.log(
+                    'Merging items with recorded volume:',
+                    recordedVolume,
+                    unit
+                  )
+                  mergeItems(
+                    currentItem,
+                    item,
+                    mergeRule,
+                    recordedVolume,
+                    unit,
+                    precision
+                  )
+
                   if (currentStepIndex === procedureSteps.steps.length - 1) {
                     setIsCalculating(false)
                     setCurrentStepIndex(currentStepIndex + 1)
@@ -293,6 +370,8 @@ function AnimationBox(props: any) {
                 recommendedVolume: recommendedVolume,
                 capacity: capacity,
                 contents: contents,
+                precision: precision,
+                instrumentName: measuringTool?.name || '',
               })
             } else {
               setTimeout(
@@ -509,6 +588,8 @@ function AnimationBox(props: any) {
         recommendedVolume={volumeDialogData.recommendedVolume}
         capacity={volumeDialogData.capacity}
         contents={volumeDialogData.contents}
+        precision={volumeDialogData.precision}
+        instrumentName={volumeDialogData.instrumentName}
       />
       {contextMenu.visible && (
         <ContextMenu
