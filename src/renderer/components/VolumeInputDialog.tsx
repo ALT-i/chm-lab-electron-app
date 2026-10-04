@@ -147,7 +147,12 @@ const VolumeInputDialog = ({
           </button>
           <button
             onClick={handleConfirm}
-            className="px-4 py-2 rounded text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition"
+            disabled={volume <= 0}
+            className={`px-4 py-2 rounded text-sm font-medium text-white transition ${
+              volume <= 0
+                ? 'bg-gray-400 cursor-not-allowed opacity-60'
+                : 'bg-green-600 hover:bg-green-700'
+            }`}
           >
             Apply
           </button>

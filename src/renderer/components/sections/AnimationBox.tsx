@@ -107,11 +107,27 @@ function AnimationBox(props: any) {
     setIsModalOpen(false)
   }, [])
 
-  const handleVolumeChange = (volume) => {
-    // Logic to handle volume change and simulate pouring
-    console.log('Volume to add:', volume)
-    // Use react-liquid-gauge to simulate pouring
-    // Update the state or perform any other necessary actions
+  const handleVolumeChange = (volume: number) => {
+    if (!contextMenu.currentItem) return
+    const volNum = Math.max(0, Number(volume) || 0)
+    setDroppedItems((prevItems) =>
+      prevItems.map((it) => {
+        if (it.id === contextMenu.currentItem.id) {
+          const precision = it.precision || 0.5
+          const formattedVol = formatWithPrecision(volNum, precision)
+          const baseName = it.name || 'Solution'
+          return {
+            ...it,
+            volume: volNum,
+            contents: volNum,
+            displayName:
+              volNum > 0 ? `${formattedVol} cm³ of ${baseName}` : baseName,
+          }
+        }
+        return it
+      })
+    )
+    setContextMenu((prev) => ({ ...prev, visible: false }))
   }
 
   const handleRightClick = (event, item) => {
@@ -281,20 +297,36 @@ function AnimationBox(props: any) {
       const container = pickContainer(item1, item2, mergeRule)
       const other = container === item1 ? item2 : item1
       const capacity = getCapacity(container) ?? getCapacity(other)
-      const contents =
-        getContents(item1) + getContents(item2) + (toCm3(volume, unit) || 0)
+
+      const prevVol1 = item1?.contents || item1?.volume || 0
+      const prevVol2 = item2?.contents || item2?.volume || 0
+      const pouredCm3 = toCm3(volume, unit) || 0
+
+      // If pouredCm3 is provided, accumulate with existing volume; otherwise preserve existing volume (e.g. heating)
+      const totalVolume =
+        pouredCm3 > 0
+          ? prevVol1 + prevVol2 > 0
+            ? Math.max(prevVol1, prevVol2) + pouredCm3
+            : pouredCm3
+          : Math.max(prevVol1, prevVol2)
+
+      const contents = Math.max(
+        getContents(item1) + getContents(item2) + pouredCm3,
+        totalVolume
+      )
 
       setDroppedItems((currentItems) => {
         const filteredItems = currentItems.filter(
           (item) => item.id !== item1.id && item.id !== item2.id
         )
-        const formattedVolume = formatWithPrecision(volume, precision)
+        const displayVol = totalVolume > 0 ? totalVolume : volume
+        const formattedVolume = formatWithPrecision(displayVol, precision)
         const mergedItem = {
           id: `merged-${Date.now()}`,
           name: mergeRule.result.name, // Keep the original name for matching
           displayName:
-            volume > 0
-              ? `${formattedVolume} ${unit} of ${mergeRule.result.name}`
+            displayVol > 0
+              ? `${formattedVolume} cm³ of ${mergeRule.result.name}`
               : mergeRule.result.name,
           type: item1.type,
           position: {
@@ -302,8 +334,8 @@ function AnimationBox(props: any) {
             y: (item1.position.y + item2.position.y) / 2,
           },
           image: mergeRule.result.image,
-          volume: volume,
-          unit: unit,
+          volume: displayVol,
+          unit: 'cm³',
           capacity: capacity,
           contents: contents,
           precision: precision,
@@ -329,7 +361,8 @@ function AnimationBox(props: any) {
     droppedItems.forEach((item) => {
       if (item.id !== currentItem.id) {
         if (doItemsOverlap(currentItem, item)) {
-          const currentStep = procedureSteps.steps[currentStepIndex]
+          const currentStep = procedureSteps?.steps?.[currentStepIndex]
+          if (!currentStep) return
 
           if (isValidMergeForStep(currentItem, item, currentStep)) {
             const mergeRule = currentStep.mergeRules?.find((rule) => {
@@ -341,7 +374,15 @@ function AnimationBox(props: any) {
               )
             })
 
-            if (currentItem.type === 'SUBSTANCE' || item.type === 'SUBSTANCE') {
+            const isHeatingTool = (it: any) => {
+              if (!it?.name) return false
+              const n = it.name.toLowerCase()
+              return n.includes('burner') || n.includes('bunsen') || n.includes('oven')
+            }
+
+            const isHeating = isHeatingTool(currentItem) || isHeatingTool(item)
+
+            if (!isHeating && (currentItem.type === 'SUBSTANCE' || item.type === 'SUBSTANCE')) {
               console.log('SUBSTANCE dropped, opening volume dialog')
               const container = pickContainer(currentItem, item, mergeRule)
               const measuringTool =
@@ -414,18 +455,25 @@ function AnimationBox(props: any) {
                     description: currentStep?.description,
                     apparatusName: measuringTool?.name || container?.name || '',
                     substanceName: currentItem?.name || item?.name || '',
-                    targetVolume: recommendedVolume != null ? recommendedVolume : undefined,
+                    targetVolume:
+                      recommendedVolume != null ? recommendedVolume : undefined,
                     inputVolume: volumeCm3,
                     recordedVolume: recordedCm3,
                     unit: unit,
                     precision: precision,
                     tolerance: mergeRule?.tolerance ?? precision,
                     isAcceptable: true,
-                    difference: recommendedVolume != null ? recordedCm3 - recommendedVolume : 0,
+                    difference:
+                      recommendedVolume != null
+                        ? recordedCm3 - recommendedVolume
+                        : 0,
                     timestamp: Date.now(),
                     phValue: currentItem?.phValue ?? item?.phValue ?? null,
                   }
-                  const updatedMeasurements = [...measurementsRef.current, record]
+                  const updatedMeasurements = [
+                    ...measurementsRef.current,
+                    record,
+                  ]
                   measurementsRef.current = updatedMeasurements
 
                   mergeItems(
@@ -438,7 +486,8 @@ function AnimationBox(props: any) {
                   )
 
                   if (currentStepIndex === procedureSteps.steps.length - 1) {
-                    const dynamicGrade = calculateSessionGrade(updatedMeasurements)
+                    const dynamicGrade =
+                      calculateSessionGrade(updatedMeasurements)
                     const telemetry: SessionTelemetry = {
                       lessonId: props.lessonId || '',
                       startedAt: startTimeRef.current,
@@ -451,11 +500,14 @@ function AnimationBox(props: any) {
                     setIsCalculating(false)
                     setCurrentStepIndex(currentStepIndex + 1)
                     setIsExperimentCompleted(true)
-                    if (onExperimentComplete) onExperimentComplete(true, telemetry, dynamicGrade)
+                    if (onExperimentComplete)
+                      onExperimentComplete(true, telemetry, dynamicGrade)
                     showModal(
                       `Experiment Complete!`,
                       `You've successfully completed the experiment! Dynamic Grade: ${dynamicGrade.overallGrade}% (Accuracy: ${dynamicGrade.averageTargetAdherence}%, Precision: ${dynamicGrade.averagePrecisionAdherence}%).`,
-                      `Final product: ${item?.name || 'Completed'}. You can now submit your dynamic grade to Moodle!`
+                      `Final product: ${
+                        item?.name || 'Completed'
+                      }. You can now submit your dynamic grade to Moodle!`
                     )
                   } else {
                     setCurrentStepIndex(currentStepIndex + 1)
@@ -469,6 +521,7 @@ function AnimationBox(props: any) {
                   setVolumeDialogData((prev) => ({ ...prev, isOpen: false }))
                 },
                 maxVolume: maxVolume,
+                recommendedVolume: recommendedVolume,
                 capacity: capacity,
                 contents: contents,
                 precision: precision,
@@ -476,14 +529,20 @@ function AnimationBox(props: any) {
                 phValue: currentItem?.phValue ?? item?.phValue ?? null,
               })
             } else {
+              const existingVolume =
+                currentItem.volume ||
+                item.volume ||
+                currentItem.contents ||
+                item.contents ||
+                0
               const record: MeasurementRecord = {
                 stepIndex: currentStepIndex,
                 description: currentStep?.description,
                 apparatusName: item?.name || '',
                 substanceName: currentItem?.name || '',
                 targetVolume: undefined,
-                inputVolume: 0,
-                recordedVolume: 0,
+                inputVolume: existingVolume,
+                recordedVolume: existingVolume,
                 unit: 'cm³',
                 precision: 0,
                 tolerance: 0,
@@ -491,15 +550,26 @@ function AnimationBox(props: any) {
                 difference: 0,
                 timestamp: Date.now(),
               }
-              const updatedMeasurements = [...measurementsRef.current, record]
+              const updatedMeasurements = [
+                ...measurementsRef.current,
+                record,
+              ]
               measurementsRef.current = updatedMeasurements
 
               setTimeout(
-                () => mergeItems(currentItem, item, mergeRule, 0, 'cm³'),
+                () =>
+                  mergeItems(
+                    currentItem,
+                    item,
+                    mergeRule,
+                    existingVolume,
+                    'cm³'
+                  ),
                 500
               )
               if (currentStepIndex === procedureSteps.steps.length - 1) {
-                const dynamicGrade = calculateSessionGrade(updatedMeasurements)
+                const dynamicGrade =
+                  calculateSessionGrade(updatedMeasurements)
                 const telemetry: SessionTelemetry = {
                   lessonId: props.lessonId || '',
                   startedAt: startTimeRef.current,
@@ -512,11 +582,14 @@ function AnimationBox(props: any) {
                 setIsCalculating(false)
                 setCurrentStepIndex(currentStepIndex + 1)
                 setIsExperimentCompleted(true)
-                if (onExperimentComplete) onExperimentComplete(true, telemetry, dynamicGrade)
+                if (onExperimentComplete)
+                  onExperimentComplete(true, telemetry, dynamicGrade)
                 showModal(
                   `Experiment Complete!`,
                   `You've successfully completed the experiment! Dynamic Grade: ${dynamicGrade.overallGrade}% (Accuracy: ${dynamicGrade.averageTargetAdherence}%, Precision: ${dynamicGrade.averagePrecisionAdherence}%).`,
-                  `Final product: ${item?.name || 'Completed'}. You can now submit your dynamic grade to Moodle!`
+                  `Final product: ${
+                    item?.name || 'Completed'
+                  }. You can now submit your dynamic grade to Moodle!`
                 )
               } else {
                 setCurrentStepIndex(currentStepIndex + 1)
@@ -724,6 +797,7 @@ function AnimationBox(props: any) {
         onClose={volumeDialogData.onCancel}
         onConfirm={volumeDialogData.onConfirm}
         maxVolume={volumeDialogData.maxVolume}
+        recommendedVolume={volumeDialogData.recommendedVolume}
         capacity={volumeDialogData.capacity}
         contents={volumeDialogData.contents}
         precision={volumeDialogData.precision}
@@ -744,8 +818,13 @@ function AnimationBox(props: any) {
             )
             setContextMenu({ ...contextMenu, visible: false })
           }}
-          // onVolumeChange={handleVolumeChange}
+          onVolumeChange={handleVolumeChange}
           itemType={contextMenu.currentItem.type}
+          initialVolume={
+            contextMenu.currentItem.volume ??
+            contextMenu.currentItem.contents ??
+            0
+          }
         />
       )}
     </div>

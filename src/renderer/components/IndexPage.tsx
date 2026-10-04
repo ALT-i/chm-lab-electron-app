@@ -34,7 +34,14 @@ function IndexPage(props: any) {
   const [dynamicGrade, setDynamicGrade] = useState<GradeEvaluation | null>(null)
   const [isTooltipOpen, setIsTooltipOpen] = useState(false)
   const [drawerState, setOpenDrawer] = React.useState(false)
-  const [drawerVisible, setDrawerVisible] = useState(true)
+  const [drawerVisible, setDrawerVisible] = useState(() => {
+    try {
+      const saved = localStorage.getItem('chem_lab_drawer_visible')
+      return saved !== null ? JSON.parse(saved) : true
+    } catch {
+      return true
+    }
+  })
 
   const handleExperimentComplete = (
     completed: boolean,
@@ -51,7 +58,15 @@ function IndexPage(props: any) {
   }
 
   const togglePanel = () => {
-    setDrawerVisible(!drawerVisible)
+    setDrawerVisible((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem('chem_lab_drawer_visible', JSON.stringify(next))
+      } catch {
+        // ignore storage errors
+      }
+      return next
+    })
   }
 
   const openDrawer = () => setOpenDrawer(true)
@@ -312,7 +327,7 @@ function IndexPage(props: any) {
                     {!drawerVisible && (
                       <button
                         className="text-lg bg-green-500 hover:bg-white font-normal px-4 my-1 rounded-lg border shadow-lg"
-                        onClick={() => setDrawerVisible(!drawerVisible)}
+                        onClick={togglePanel}
                         title="Toggle Sidebar"
                       >
                         Instructions
