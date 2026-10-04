@@ -59,7 +59,8 @@ const ContextMenu = ({
               onChange={handleVolumeChange}
               onClick={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.stopPropagation()}
-              placeholder="Volume to add"
+              placeholder="Volume (cm³)"
+              title="Sets the total volume in this container"
               style={{ width: '100%' }}
             />
             <button

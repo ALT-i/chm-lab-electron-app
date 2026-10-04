@@ -27,7 +27,7 @@ function InstructionsPanel(props: any) {
 
   return (
     <div
-      className={`w-1/5 basis-1/5 bg-gray-300 shadow-lg rounded-lg px-2 py-4 mx-2 my-7 overflow-auto ${drawerClasses}`}
+      className={`w-1/5 basis-1/5 bg-gray-300 shadow-lg rounded-lg px-2 pt-4 pb-8 mx-2 my-2 overflow-auto ${drawerClasses}`}
     >
       <div className="flex justify-between items-center w-full px-3 py-1 rounded-lg shadow-sm">
         <Typography variant="h5" color="green" textGradient>

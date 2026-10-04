@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useRef, useState, useEffect, useLayoutEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { Typography, IconButton, Button } from '@material-tailwind/react'
@@ -168,6 +168,24 @@ function IndexPage(props: any) {
   }
 
   const isPanelOpen = props.isPanelOpen
+
+  // The page itself doesn't scroll, so size the workbench row to the space left below
+  // the header; a fixed vh height pushed the bottom of the side panels off-screen.
+  const workbenchRowRef = useRef<HTMLDivElement>(null)
+  const [workbenchHeight, setWorkbenchHeight] = useState<number | null>(null)
+
+  useLayoutEffect(() => {
+    const updateHeight = () => {
+      const row = workbenchRowRef.current
+      if (!row) return
+      const bottomGap = 16
+      const top = row.getBoundingClientRect().top
+      setWorkbenchHeight(Math.max(360, window.innerHeight - top - bottomGap))
+    }
+    updateHeight()
+    window.addEventListener('resize', updateHeight)
+    return () => window.removeEventListener('resize', updateHeight)
+  }, [chosenClass, classTitle, drawerVisible, isExperimentCompleted])
 
   //Fetch class details from local machine with node process and render with IPC signals
 
@@ -339,9 +357,10 @@ function IndexPage(props: any) {
                 {/* <p>Parameters: {classParameters}</p> */}
               </div>
               <div
+                ref={workbenchRowRef}
                 className="flex flex-row"
                 style={{
-                  height: drawerVisible ? '80vh' : '75vh',
+                  height: workbenchHeight ?? (drawerVisible ? '80vh' : '75vh'),
                 }}
               >
                 <StockRoomPanel

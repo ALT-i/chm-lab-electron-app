@@ -16,6 +16,7 @@ const VolumeInputDialog = ({
   capacity = null as number | null,
   contents = 0,
   precision = 0.5 as number,
+  tolerance = null as number | null,
   instrumentName = '' as string,
   phValue = null as number | null,
 }) => {
@@ -29,27 +30,29 @@ const VolumeInputDialog = ({
     }
   }, [isOpen])
 
-  // maxVolume is in cm³; clamp the typed value in whichever unit is selected
-  const clampToMax = (value: number, selectedUnit: string) => {
-    if (isNaN(value)) return 0
-    return Math.min(Math.max(0, value), maxVolume / toCm3(1, selectedUnit))
-  }
+  const volumeCm3 = toCm3(volume, unit)
+  // maxVolume is in cm³: the space left in the container (or the step's target)
+  const exceedsMax = maxVolume != null && volumeCm3 > maxVolume + 1e-6
+  const canApply = volume > 0 && !exceedsMax
 
   const handleConfirm = () => {
+    if (!canApply) return
     onConfirm(volume, unit)
     onClose()
   }
 
   if (!isOpen) return null
 
-  const volumeCm3 = toCm3(volume, unit)
   const stepInCm3 = getInstrumentStep(precision)
   const stepInSelectedUnit = stepInCm3 / toCm3(1, unit)
-  const tolerance = precision
+  // Same tolerance the workbench enforces: the step's own tolerance, else instrument precision
+  const toleranceCm3 = tolerance ?? precision
   const minAcceptable =
-    recommendedVolume != null ? Math.max(0, recommendedVolume - tolerance) : null
+    recommendedVolume != null
+      ? Math.max(0, recommendedVolume - toleranceCm3)
+      : null
   const maxAcceptable =
-    recommendedVolume != null ? recommendedVolume + tolerance : null
+    recommendedVolume != null ? recommendedVolume + toleranceCm3 : null
   const isOutsideTolerance =
     recommendedVolume != null &&
     (volumeCm3 < (minAcceptable ?? 0) - 1e-6 ||
@@ -95,7 +98,7 @@ const VolumeInputDialog = ({
               max={maxVolume / toCm3(1, unit)}
               value={volume === 0 ? '' : volume}
               onChange={(e) =>
-                setVolume(clampToMax(parseFloat(e.target.value) || 0, unit))
+                setVolume(Math.max(0, parseFloat(e.target.value) || 0))
               }
               placeholder={`e.g. ${
                 recommendedVolume != null
@@ -109,16 +112,18 @@ const VolumeInputDialog = ({
             />
             <select
               value={unit}
-              onChange={(e) => {
-                const newUnit = e.target.value
-                setUnit(newUnit)
-                setVolume((current) => clampToMax(current, newUnit))
-              }}
+              onChange={(e) => setUnit(e.target.value)}
               className="border border-gray-300 rounded p-2 mt-2 w-full text-sm bg-white"
             >
               <option value="cm³">cm³ (mL)</option>
               <option value="dm³">dm³ (L)</option>
             </select>
+            {exceedsMax && (
+              <p className="text-red-600 text-xs font-medium mt-2">
+                ⚠️ Overflow: at most {formatWithPrecision(maxVolume, precision)}{' '}
+                cm³ more fits in this container.
+              </p>
+            )}
             {recommendedVolume != null && (
               <div className="mt-2 text-xs">
                 <span className="text-gray-600">
@@ -147,9 +152,9 @@ const VolumeInputDialog = ({
           </button>
           <button
             onClick={handleConfirm}
-            disabled={volume <= 0}
+            disabled={!canApply}
             className={`px-4 py-2 rounded text-sm font-medium text-white transition ${
-              volume <= 0
+              !canApply
                 ? 'bg-gray-400 cursor-not-allowed opacity-60'
                 : 'bg-green-600 hover:bg-green-700'
             }`}

@@ -6,6 +6,18 @@ import axios from 'axios'
 import SectionSidePanel from 'renderer/components/sections/SectionSidePanel'
 import { ds } from 'renderer/utils/design-system'
 import server from 'renderer/utils'
+import { useSidebarState } from 'renderer/utils/use-sidebar-state'
+
+// Remembered for the app session so "Back" from an experiment returns to the same page
+const CATALOG_PAGE_KEY = 'chem_lab_catalog_page'
+
+function readCatalogPage(): number {
+  try {
+    return Number(sessionStorage.getItem(CATALOG_PAGE_KEY)) || 1
+  } catch {
+    return 1
+  }
+}
 
 interface Experiment {
   id: number
@@ -22,17 +34,13 @@ interface Experiment {
 }
 
 export function ClassSelectionView() {
-  const [isPanelOpen, setIsPanelOpen] = useState(true)
+  const { isPanelOpen, togglePanel } = useSidebarState()
   const [experiments, setExperiments] = useState<Experiment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [currentPage, setCurrentPage] = useState(1)
+  const [currentPage, setCurrentPage] = useState(readCatalogPage)
   const [experimentsPerPage] = useState(6)
   const navigate = useNavigate()
-
-  const togglePanel = () => {
-    setIsPanelOpen(!isPanelOpen)
-  }
 
   useEffect(() => {
     const fetchExperiments = async () => {
@@ -129,8 +137,22 @@ export function ClassSelectionView() {
   const currentExperiments = experiments.slice(indexOfFirstExperiment, indexOfLastExperiment)
   const totalPages = Math.ceil(experiments.length / experimentsPerPage)
 
-  const handlePageChange = (pageNumber: number) => {
+  const savePage = (pageNumber: number) => {
     setCurrentPage(pageNumber)
+    try {
+      sessionStorage.setItem(CATALOG_PAGE_KEY, String(pageNumber))
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  // A remembered page can be past the end if the catalog shrank
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) savePage(totalPages)
+  }, [totalPages, currentPage])
+
+  const handlePageChange = (pageNumber: number) => {
+    savePage(pageNumber)
     // Scroll to top of experiments section
     document.getElementById('experiments-section')?.scrollIntoView({ behavior: 'smooth' })
   }
