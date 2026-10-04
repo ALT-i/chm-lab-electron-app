@@ -11,18 +11,62 @@ export function toCm3(value: number, unit: string): number {
   return value * (CM3_PER_UNIT[unit] ?? 1)
 }
 
+// Apparatus names in the database are often misspelled ('5ml Pippette', '50ml Burrette').
+const PIPETTE_PATTERN = /pip+et+e/i
+const BURETTE_PATTERN = /bur+et+e/i
+
+export function isPipette(item: any): boolean {
+  return PIPETTE_PATTERN.test(item?.name || '')
+}
+
+// Capacity written into an apparatus name, in cm³: "250cm3 Conical Flask" -> 250,
+// "1000 mL Beaker" -> 1000, "1 litre Flask" -> 1000. Null when the name has none.
+export function parseCapacityFromName(name?: string | null): number | null {
+  const match = (name || '').match(
+    /(\d+(?:\.\d+)?)\s*(litres?|liters?|cm3|cm³|ml|dm3|dm³|l)(?![a-z])/i
+  )
+  if (!match) return null
+  const value = parseFloat(match[1])
+  const unit = match[2].toLowerCase()
+  const isLitres = unit.startsWith('l') || unit.startsWith('dm')
+  return isLitres ? value * 1000 : value
+}
+
 // Capacity in cm³, or null when unknown.
-// Merged items carry `capacity` explicitly; raw apparatus (TOOL) use their `volume` field.
+// Merged items carry `capacity` explicitly; raw apparatus (TOOL) use their `volume` field,
+// falling back to a size in the name. Pipettes are left unconstrained: the curriculum has
+// students transfer 25 cm³ with the '5ml Pippette' in a single step.
 export function getCapacity(item: any): number | null {
   if (!item) return null
   if ('capacity' in item) return item.capacity ?? null
-  if (item.type === 'TOOL') return item.volume ?? null
+  if (item.type === 'TOOL') {
+    if (isPipette(item)) return null
+    return item.volume ?? parseCapacityFromName(item.name)
+  }
   return null
 }
 
-// Liquid already in the container, in cm³.
+// Liquid already in the container, in cm³. On raw apparatus `volume` is the capacity,
+// so liquid only ever comes from `contents`.
 export function getContents(item: any): number {
   return item?.contents ?? 0
+}
+
+// Liquid in the result of a merge, in cm³. A pour adds to what the receiving container
+// already holds; combining two vessels without a pour (a transfer, heating) keeps the
+// liquid of both.
+export function getMergedContents(
+  container: any,
+  other: any,
+  pouredCm3: number
+): number {
+  if (pouredCm3 > 0) return getContents(container) + pouredCm3
+  return getContents(container) + getContents(other)
+}
+
+// Tolerance a step allows around its target volume, in cm³.
+export function getStepTolerance(mergeRule: any, precision: number): number {
+  return mergeRule?.tolerance ?? precision
 }
 
 export interface PourLimits {
@@ -32,24 +76,22 @@ export interface PourLimits {
   recommendedVolume: number | null
 }
 
+// A step's targetVolume always fits: the merge rule is authoritative even when the
+// container's recorded capacity disagrees with it.
 export function getPourLimits(container: any, mergeRule?: any): PourLimits {
   const capacity = getCapacity(container)
   const contents = getContents(container)
-
-  if (capacity === null) {
-    return {
-      capacity,
-      contents,
-      maxVolume: LEGACY_MAX_VOLUME,
-      recommendedVolume: mergeRule?.targetVolume ?? LEGACY_RECOMMENDED_VOLUME,
-    }
-  }
+  const recommendedVolume =
+    mergeRule?.targetVolume ??
+    (capacity === null ? LEGACY_RECOMMENDED_VOLUME : null)
+  const spaceLeft =
+    capacity === null ? LEGACY_MAX_VOLUME : Math.max(capacity - contents, 0)
 
   return {
     capacity,
     contents,
-    maxVolume: Math.max(capacity - contents, 0),
-    recommendedVolume: mergeRule?.targetVolume ?? null,
+    maxVolume: Math.max(spaceLeft, recommendedVolume ?? 0),
+    recommendedVolume,
   }
 }
 
@@ -99,8 +141,8 @@ export function getInstrumentPrecision(item: any): number {
     return item.precision
   }
   const name = (item.name || item.type || '').toLowerCase()
-  if (name.includes('burette')) return DEFAULT_INSTRUMENT_PRECISION.burette
-  if (name.includes('pipette')) return DEFAULT_INSTRUMENT_PRECISION.pipette
+  if (BURETTE_PATTERN.test(name)) return DEFAULT_INSTRUMENT_PRECISION.burette
+  if (PIPETTE_PATTERN.test(name)) return DEFAULT_INSTRUMENT_PRECISION.pipette
   if (name.includes('volumetric'))
     return DEFAULT_INSTRUMENT_PRECISION.volumetric
   if (name.includes('cylinder')) {

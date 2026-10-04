@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useRef, useState, useEffect, useLayoutEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { Typography, IconButton, Button } from '@material-tailwind/react'
@@ -34,7 +34,14 @@ function IndexPage(props: any) {
   const [dynamicGrade, setDynamicGrade] = useState<GradeEvaluation | null>(null)
   const [isTooltipOpen, setIsTooltipOpen] = useState(false)
   const [drawerState, setOpenDrawer] = React.useState(false)
-  const [drawerVisible, setDrawerVisible] = useState(true)
+  const [drawerVisible, setDrawerVisible] = useState(() => {
+    try {
+      const saved = localStorage.getItem('chem_lab_drawer_visible')
+      return saved !== null ? JSON.parse(saved) : true
+    } catch {
+      return true
+    }
+  })
 
   const handleExperimentComplete = (
     completed: boolean,
@@ -51,7 +58,15 @@ function IndexPage(props: any) {
   }
 
   const togglePanel = () => {
-    setDrawerVisible(!drawerVisible)
+    setDrawerVisible((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem('chem_lab_drawer_visible', JSON.stringify(next))
+      } catch {
+        // ignore storage errors
+      }
+      return next
+    })
   }
 
   const openDrawer = () => setOpenDrawer(true)
@@ -153,6 +168,24 @@ function IndexPage(props: any) {
   }
 
   const isPanelOpen = props.isPanelOpen
+
+  // The page itself doesn't scroll, so size the workbench row to the space left below
+  // the header; a fixed vh height pushed the bottom of the side panels off-screen.
+  const workbenchRowRef = useRef<HTMLDivElement>(null)
+  const [workbenchHeight, setWorkbenchHeight] = useState<number | null>(null)
+
+  useLayoutEffect(() => {
+    const updateHeight = () => {
+      const row = workbenchRowRef.current
+      if (!row) return
+      const bottomGap = 16
+      const top = row.getBoundingClientRect().top
+      setWorkbenchHeight(Math.max(360, window.innerHeight - top - bottomGap))
+    }
+    updateHeight()
+    window.addEventListener('resize', updateHeight)
+    return () => window.removeEventListener('resize', updateHeight)
+  }, [chosenClass, classTitle, drawerVisible, isExperimentCompleted])
 
   //Fetch class details from local machine with node process and render with IPC signals
 
@@ -312,7 +345,7 @@ function IndexPage(props: any) {
                     {!drawerVisible && (
                       <button
                         className="text-lg bg-green-500 hover:bg-white font-normal px-4 my-1 rounded-lg border shadow-lg"
-                        onClick={() => setDrawerVisible(!drawerVisible)}
+                        onClick={togglePanel}
                         title="Toggle Sidebar"
                       >
                         Instructions
@@ -324,9 +357,10 @@ function IndexPage(props: any) {
                 {/* <p>Parameters: {classParameters}</p> */}
               </div>
               <div
+                ref={workbenchRowRef}
                 className="flex flex-row"
                 style={{
-                  height: drawerVisible ? '80vh' : '75vh',
+                  height: workbenchHeight ?? (drawerVisible ? '80vh' : '75vh'),
                 }}
               >
                 <StockRoomPanel

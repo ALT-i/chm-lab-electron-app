@@ -8,7 +8,10 @@ import {
   formatNumber,
   formatSubstanceLabel,
   getCapacity,
+  getMergedContents,
   getPourLimits,
+  getStepTolerance,
+  parseCapacityFromName,
   pickContainer,
   toCm3,
   getInstrumentPrecision,
@@ -87,6 +90,68 @@ test('unknown capacity falls back to the legacy 500 / 200 limits', () => {
   assert.equal(limits.recommendedVolume, LEGACY_RECOMMENDED_VOLUME)
 })
 
+test('Exp 5A: a 1000 cm³ targetVolume fits an unknown-capacity container', () => {
+  const limits = getPourLimits(thermometer, { targetVolume: 1000 })
+  assert.equal(limits.maxVolume, 1000)
+  assert.equal(limits.recommendedVolume, 1000)
+})
+
+test('Exp 5A: 1000 cm³ fits a flask sized by its name', () => {
+  const flask = { name: '1 litre Flask', type: 'TOOL', volume: null }
+  assert.equal(getCapacity(flask), 1000)
+  assert.equal(getPourLimits(flask).maxVolume, 1000)
+})
+
+test("the merge rule's targetVolume always fits, even past a recorded capacity", () => {
+  const limits = getPourLimits(beaker250, { targetVolume: 1000 })
+  assert.equal(limits.maxVolume, 1000)
+  assert.equal(limits.recommendedVolume, 1000)
+})
+
+test('capacity is read from the apparatus name when volume is missing', () => {
+  assert.equal(parseCapacityFromName('250cm3 Conical Flask'), 250)
+  assert.equal(parseCapacityFromName('250 cm³ Conical Flask'), 250)
+  assert.equal(parseCapacityFromName('1000 mL Beaker'), 1000)
+  assert.equal(parseCapacityFromName('1 litre Flask'), 1000)
+  assert.equal(parseCapacityFromName('0.5 dm3 Flask'), 500)
+  assert.equal(parseCapacityFromName('Bunsen Burner'), null)
+  assert.equal(
+    getCapacity({ name: '250cm3 Conical Flask', type: 'TOOL', volume: null }),
+    250
+  )
+})
+
+test('pipettes are unconstrained so 25 cm³ transfers with the 5ml Pippette work', () => {
+  const pipette = { name: '5ml Pippette', type: 'TOOL', volume: null }
+  assert.equal(getCapacity(pipette), null)
+  assert.equal(getCapacity({ ...pipette, volume: 5 }), null)
+  assert.ok(getPourLimits(pipette).maxVolume >= 25)
+})
+
+test('merged contents: a pour adds to the container, ignoring its capacity', () => {
+  const freshFlask = { name: '250cm3 Conical Flask', type: 'TOOL', volume: 250 }
+  assert.equal(getMergedContents(freshFlask, hcl, 25), 25)
+
+  const flaskWith10 = { name: 'Oxalic acid', capacity: 250, contents: 10 }
+  assert.equal(getMergedContents(flaskWith10, hcl, 5), 15)
+})
+
+test('merged contents: heating or a transfer keeps the liquid of both items', () => {
+  const burner = { name: 'Bunsen Burner', type: 'TOOL', volume: null }
+  const solution = { name: 'Heated mix', capacity: 250, contents: 40 }
+  assert.equal(getMergedContents(solution, burner, 0), 40)
+
+  const pipetteSolution = { name: 'NaOH (pipetted)', capacity: null, contents: 25 }
+  const flaskWith10 = { name: 'Flask', capacity: 250, contents: 10 }
+  assert.equal(getMergedContents(flaskWith10, pipetteSolution, 0), 35)
+})
+
+test('step tolerance prefers the merge rule over instrument precision', () => {
+  assert.equal(getStepTolerance({ tolerance: 10 }, 0.05), 10)
+  assert.equal(getStepTolerance({}, 0.05), 0.05)
+  assert.equal(getStepTolerance(undefined, 0.5), 0.5)
+})
+
 test('a fresh 250 mL beaker allows up to 250 cm³', () => {
   assert.equal(getPourLimits(beaker250).maxVolume, 250)
 })
@@ -151,6 +216,11 @@ test('getInstrumentPrecision falls back to sensible defaults by name/type', () =
   assert.equal(getInstrumentPrecision({ name: '250 mL Conical Flask' }), 5.0)
   assert.equal(getInstrumentPrecision({ name: 'Dropper' }), 0.1)
   assert.equal(getInstrumentPrecision(null), 0.5)
+})
+
+test('getInstrumentPrecision tolerates misspelled names from the database', () => {
+  assert.equal(getInstrumentPrecision({ name: '5ml Pippette' }), 0.05)
+  assert.equal(getInstrumentPrecision({ name: '50ml Burrette' }), 0.05)
 })
 
 test('getPrecisionDecimals calculates correct decimal places', () => {

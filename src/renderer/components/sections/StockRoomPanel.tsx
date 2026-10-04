@@ -47,7 +47,7 @@ function StockRoomPanel(props: any) {
   const apparatus = props.tools
 
   return (
-    <div className="w-1/5 basis-1/5 px-2 py-3 mx-2 my-7 overflow-auto bg-gray-300 rounded-lg shadow-inner">
+    <div className="w-1/5 basis-1/5 px-2 pt-3 pb-8 mx-2 my-2 overflow-auto bg-gray-300 rounded-lg shadow-inner">
       <Typography
         variant="h4"
         color="green"
@@ -68,7 +68,7 @@ function StockRoomPanel(props: any) {
         >
           <p>Substances</p>
         </AccordionHeader>
-        <AccordionBody className="pt-0 text-base font-normal">
+        <AccordionBody className="pt-0 text-base font-normal max-h-60 overflow-y-auto pr-1">
           <ul className="apparatus-list grid grid-cols-2 gap-1 justify-center">
             {substances &&
               substances.map((subs, index) => (
@@ -77,7 +77,11 @@ function StockRoomPanel(props: any) {
                   key={index}
                   className="border-dotted hover:border-solid border cursor-grab"
                 >
-                  <DraggableItem item={subs} type="SUBSTANCE" />
+                  <DraggableItem
+                    item={subs}
+                    type="SUBSTANCE"
+                    onRightClick={(e) => e.preventDefault()}
+                  />
                 </li>
               ))}
           </ul>
@@ -97,7 +101,7 @@ function StockRoomPanel(props: any) {
           <p>Apparatus</p>
           <i className="fa fa-cubes" aria-hidden="true"></i>
         </AccordionHeader>
-        <AccordionBody className="pt-0 text-base font-normal">
+        <AccordionBody className="pt-0 text-base font-normal max-h-72 overflow-y-auto pr-1">
           <ul className="apparatus-list grid grid-cols-3 gap-1 justify-center">
             {apparatus &&
               apparatus.map((tool, index) => (
@@ -107,7 +111,11 @@ function StockRoomPanel(props: any) {
                   className="border-dotted hover:border-solid border cursor-grab"
                 >
                   <Tooltip content={tool.name}>
-                    <DraggableItem item={tool} type="TOOL" />
+                    <DraggableItem
+                      item={tool}
+                      type="TOOL"
+                      onRightClick={(e) => e.preventDefault()}
+                    />
                   </Tooltip>
                 </li>
               ))}

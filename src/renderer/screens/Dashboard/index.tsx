@@ -1,14 +1,11 @@
-import React, { useState } from 'react'
+import React from 'react'
 
 import IndexPage from 'renderer/components/IndexPage'
 import SectionSidePanel from 'renderer/components/sections/SectionSidePanel'
+import { useSidebarState } from 'renderer/utils/use-sidebar-state'
 
 export function Dashboard() {
-  const [isPanelOpen, setIsPanelOpen] = useState(true)
-
-  const togglePanel = () => {
-    setIsPanelOpen(!isPanelOpen)
-  }
+  const { isPanelOpen, togglePanel } = useSidebarState()
 
   return (
     <div className="components">

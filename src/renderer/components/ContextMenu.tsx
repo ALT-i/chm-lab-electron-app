@@ -1,15 +1,33 @@
 // src/renderer/components/ContextMenu.jsx
 import React, { useState } from 'react'
 
-const ContextMenu = ({ x, y, itemX, itemY, onRemove, onVolumeChange, itemType }) => {
-  const [volume, setVolume] = useState(0)
+const ContextMenu = ({
+  x,
+  y,
+  itemX,
+  itemY,
+  onRemove,
+  onVolumeChange,
+  itemType,
+  initialVolume = 0,
+}: {
+  x: number
+  y: number
+  itemX: number
+  itemY: number
+  onRemove: () => void
+  onVolumeChange: (volume: number) => void
+  itemType: string
+  initialVolume?: number
+}) => {
+  const [volume, setVolume] = useState(initialVolume)
 
-  const handleVolumeChange = (e) => {
-    setVolume(e.target.value)
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setVolume(Number(e.target.value))
   }
 
   const handleApply = () => {
-    onVolumeChange(volume)
+    onVolumeChange(Number(volume))
   }
 
   const relativeX = x - itemX
@@ -17,6 +35,8 @@ const ContextMenu = ({ x, y, itemX, itemY, onRemove, onVolumeChange, itemType })
 
   return (
     <div
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
       style={{
         position: 'absolute',
         top: relativeY,
@@ -33,9 +53,14 @@ const ContextMenu = ({ x, y, itemX, itemY, onRemove, onVolumeChange, itemType })
           <li style={{ marginBottom: '10px' }}>
             <input
               type="number"
+              min="0"
+              step="any"
               value={volume}
               onChange={handleVolumeChange}
-              placeholder="Volume to add"
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              placeholder="Volume (cm³)"
+              title="Sets the total volume in this container"
               style={{ width: '100%' }}
             />
             <button
