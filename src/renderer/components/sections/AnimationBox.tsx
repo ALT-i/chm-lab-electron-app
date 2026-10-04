@@ -19,6 +19,12 @@ import {
   pickContainer,
   toCm3,
 } from '../../utils/lab-measurements'
+import {
+  calculateSessionGrade,
+  MeasurementRecord,
+  SessionTelemetry,
+  GradeEvaluation,
+} from '../../utils/lab-grading'
 
 
 interface Item {
@@ -57,8 +63,9 @@ function AnimationBox(props: any) {
   const [isExperimentCompleted, setIsExperimentCompleted] = useState(false)
   const [volumeDialogData, setVolumeDialogData] = useState({
     isOpen: false,
-    onConfirm: null,
-    onCancel: null,
+    onConfirm: null as any,
+    onCancel: null as any,
+    maxVolume: null as number | null,
     recommendedVolume: 0 as number | null,
     capacity: null as number | null,
     contents: 0,
@@ -67,6 +74,8 @@ function AnimationBox(props: any) {
     phValue: null as number | null,
   })
   const [mergeImageSrc, setMergeImageSrc] = useState('')
+  const measurementsRef = useRef<MeasurementRecord[]>([])
+  const startTimeRef = useRef<number>(Date.now())
 
   const backgroundImages = [
     'url("./real_chemLab_bg.jpg")',
@@ -220,6 +229,7 @@ function AnimationBox(props: any) {
     [dragging, currentItem, offset]
   )
 
+  const mergeItems = useCallback(
     async (item1, item2, mergeRule, volume, unit, precision = 0.5) => {
       setIsCalculating(true)
       console.log('Merging', item1, item2)
@@ -398,6 +408,26 @@ function AnimationBox(props: any) {
                     recordedVolume,
                     unit
                   )
+                  // Record telemetry measurement
+                  const record: MeasurementRecord = {
+                    stepIndex: currentStepIndex,
+                    description: currentStep?.description,
+                    apparatusName: measuringTool?.name || container?.name || '',
+                    substanceName: currentItem?.name || item?.name || '',
+                    targetVolume: recommendedVolume != null ? recommendedVolume : undefined,
+                    inputVolume: volumeCm3,
+                    recordedVolume: recordedCm3,
+                    unit: unit,
+                    precision: precision,
+                    tolerance: mergeRule?.tolerance ?? precision,
+                    isAcceptable: true,
+                    difference: recommendedVolume != null ? recordedCm3 - recommendedVolume : 0,
+                    timestamp: Date.now(),
+                    phValue: currentItem?.phValue ?? item?.phValue ?? null,
+                  }
+                  const updatedMeasurements = [...measurementsRef.current, record]
+                  measurementsRef.current = updatedMeasurements
+
                   mergeItems(
                     currentItem,
                     item,
@@ -408,14 +438,24 @@ function AnimationBox(props: any) {
                   )
 
                   if (currentStepIndex === procedureSteps.steps.length - 1) {
+                    const dynamicGrade = calculateSessionGrade(updatedMeasurements)
+                    const telemetry: SessionTelemetry = {
+                      lessonId: props.lessonId || '',
+                      startedAt: startTimeRef.current,
+                      completedAt: Date.now(),
+                      measurements: updatedMeasurements,
+                      totalSteps: procedureSteps.steps.length,
+                      completedSteps: procedureSteps.steps.length,
+                      grading: dynamicGrade,
+                    }
                     setIsCalculating(false)
                     setCurrentStepIndex(currentStepIndex + 1)
                     setIsExperimentCompleted(true)
-                    if (onExperimentComplete) onExperimentComplete(true)
+                    if (onExperimentComplete) onExperimentComplete(true, telemetry, dynamicGrade)
                     showModal(
                       `Experiment Complete!`,
-                      `You've successfully completed the experiment and have achieved the final result of ${item?.name}. You can clear the
-                      workbench to restart the experiment!`
+                      `You've successfully completed the experiment! Dynamic Grade: ${dynamicGrade.overallGrade}% (Accuracy: ${dynamicGrade.averageTargetAdherence}%, Precision: ${dynamicGrade.averagePrecisionAdherence}%).`,
+                      `Final product: ${item?.name || 'Completed'}. You can now submit your dynamic grade to Moodle!`
                     )
                   } else {
                     setCurrentStepIndex(currentStepIndex + 1)
@@ -436,19 +476,47 @@ function AnimationBox(props: any) {
                 phValue: currentItem?.phValue ?? item?.phValue ?? null,
               })
             } else {
+              const record: MeasurementRecord = {
+                stepIndex: currentStepIndex,
+                description: currentStep?.description,
+                apparatusName: item?.name || '',
+                substanceName: currentItem?.name || '',
+                targetVolume: undefined,
+                inputVolume: 0,
+                recordedVolume: 0,
+                unit: 'cm³',
+                precision: 0,
+                tolerance: 0,
+                isAcceptable: true,
+                difference: 0,
+                timestamp: Date.now(),
+              }
+              const updatedMeasurements = [...measurementsRef.current, record]
+              measurementsRef.current = updatedMeasurements
+
               setTimeout(
                 () => mergeItems(currentItem, item, mergeRule, 0, 'cm³'),
                 500
               )
               if (currentStepIndex === procedureSteps.steps.length - 1) {
+                const dynamicGrade = calculateSessionGrade(updatedMeasurements)
+                const telemetry: SessionTelemetry = {
+                  lessonId: props.lessonId || '',
+                  startedAt: startTimeRef.current,
+                  completedAt: Date.now(),
+                  measurements: updatedMeasurements,
+                  totalSteps: procedureSteps.steps.length,
+                  completedSteps: procedureSteps.steps.length,
+                  grading: dynamicGrade,
+                }
                 setIsCalculating(false)
                 setCurrentStepIndex(currentStepIndex + 1)
                 setIsExperimentCompleted(true)
-                if (onExperimentComplete) onExperimentComplete(true)
+                if (onExperimentComplete) onExperimentComplete(true, telemetry, dynamicGrade)
                 showModal(
                   `Experiment Complete!`,
-                  `You've successfully completed the experiment and have achieved the final result of ${item?.name}. You can clear the
-                  workbench to restart the experiment!`
+                  `You've successfully completed the experiment! Dynamic Grade: ${dynamicGrade.overallGrade}% (Accuracy: ${dynamicGrade.averageTargetAdherence}%, Precision: ${dynamicGrade.averagePrecisionAdherence}%).`,
+                  `Final product: ${item?.name || 'Completed'}. You can now submit your dynamic grade to Moodle!`
                 )
               } else {
                 setCurrentStepIndex(currentStepIndex + 1)
@@ -634,6 +702,10 @@ function AnimationBox(props: any) {
           onClick={() => {
             setCurrentStepIndex(0)
             setDroppedItems([])
+            setIsExperimentCompleted(false)
+            measurementsRef.current = []
+            startTimeRef.current = Date.now()
+            if (onExperimentComplete) onExperimentComplete(false)
           }}
           className="border-green-500 text-green-500 bg-gray-100 mx-1 px-4 py-2 text-lg rounded cursor-pointer shadow transition-all hover:bg-green-500 hover:text-white hover:shadow-lg"
         >
