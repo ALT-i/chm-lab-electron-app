@@ -276,8 +276,10 @@ function IndexPage(props: any) {
                 <AnimationBox
                   procedure={classProcedure}
                   panel={drawerVisible}
+                  substances={substances}
                   onExperimentComplete={setIsExperimentCompleted}
                 />
+
                 <InstructionsPanel
                   isOpen={drawerVisible}
                   closeDrawer={togglePanel}

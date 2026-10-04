@@ -5,6 +5,10 @@ import ContextMenu from '../ContextMenu'
 import SimpleModal from '../SimpleModal'
 import VolumeInputDialog from '../VolumeInputDialog'
 import {
+  calculateReactionApi,
+  formatReactionFeedback,
+} from '../../utils/lab-reactions'
+import {
   applyReadingError,
   evaluatePourTolerance,
   formatWithPrecision,
@@ -16,15 +20,23 @@ import {
   toCm3,
 } from '../../utils/lab-measurements'
 
+
 interface Item {
   type: string
   id: string
   image: string
   position: { x: number; y: number }
+  formula?: string
+  phValue?: number
+  molarity?: number
+  name?: string
+  displayName?: string
+  volume?: number
 }
 
 function AnimationBox(props: any) {
-  const { procedure: procedureSteps, panel, onExperimentComplete } = props
+  const { procedure: procedureSteps, panel, onExperimentComplete, substances } = props
+
   const [contextMenu, setContextMenu] = useState({
     visible: false,
     x: 0,
@@ -47,12 +59,12 @@ function AnimationBox(props: any) {
     isOpen: false,
     onConfirm: null,
     onCancel: null,
-    maxVolume: 0,
     recommendedVolume: 0 as number | null,
     capacity: null as number | null,
     contents: 0,
     precision: 0.5 as number,
     instrumentName: '' as string,
+    phValue: null as number | null,
   })
   const [mergeImageSrc, setMergeImageSrc] = useState('')
 
@@ -208,47 +220,97 @@ function AnimationBox(props: any) {
     [dragging, currentItem, offset]
   )
 
-  const mergeItems = useCallback(
-    (item1, item2, mergeRule, volume, unit, precision = 0.5) => {
+    async (item1, item2, mergeRule, volume, unit, precision = 0.5) => {
       setIsCalculating(true)
       console.log('Merging', item1, item2)
-      setTimeout(() => {
-        // The result keeps the container's capacity and accumulates its contents (cm³)
-        const container = pickContainer(item1, item2, mergeRule)
-        const other = container === item1 ? item2 : item1
-        const capacity = getCapacity(container) ?? getCapacity(other)
-        const contents =
-          getContents(item1) + getContents(item2) + (toCm3(volume, unit) || 0)
-        setDroppedItems((currentItems) => {
-          const filteredItems = currentItems.filter(
-            (item) => item.id !== item1.id && item.id !== item2.id
+
+      let reactionResult = null
+      let finalPh = item1?.phValue ?? item2?.phValue ?? null
+
+      if (mergeRule?.reaction) {
+        try {
+          const reactants = (mergeRule.reaction.reactants || []).map(
+            (formula: string) => {
+              const matchingItem =
+                [item1, item2].find(
+                  (it) => it?.formula === formula || it?.name?.includes(formula)
+                ) ||
+                (substances || []).find(
+                  (s: any) => s.formula === formula || s.name?.includes(formula)
+                )
+
+              const isPoured =
+                matchingItem?.id === item1?.id || matchingItem?.name === item1?.name
+              const vol = isPoured ? (volume || 25) : (matchingItem?.volume || 25)
+              const mol = matchingItem?.molarity ?? 0.1
+
+              return {
+                formula,
+                volume: Number(vol),
+                molarity: Number(mol),
+              }
+            }
           )
-          const formattedVolume = formatWithPrecision(volume, precision)
-          const mergedItem = {
-            id: `merged-${Date.now()}`,
-            name: mergeRule.result.name, // Keep the original name for matching
-            displayName:
-              volume > 0
-                ? `${formattedVolume} ${unit} of ${mergeRule.result.name}`
-                : mergeRule.result.name,
-            type: item1.type,
-            position: {
-              x: (item1.position.x + item2.position.x) / 2,
-              y: (item1.position.y + item2.position.y) / 2,
-            },
-            image: mergeRule.result.image,
-            volume: volume,
-            unit: unit,
-            capacity: capacity,
-            contents: contents,
-            precision: precision,
+
+          const payload = {
+            reactants,
+            products: mergeRule.reaction.products || [],
+            reaction_type: mergeRule.reaction.type || 'neutralization',
           }
-          return [...filteredItems, mergedItem]
-        })
-        setIsCalculating(false)
-      }, 1000)
+
+          reactionResult = await calculateReactionApi(payload)
+          if (reactionResult?.final_ph != null) {
+            finalPh = reactionResult.final_ph
+          }
+        } catch (err) {
+          console.warn('Reaction calculation error:', err)
+        }
+      }
+
+      // The result keeps the container's capacity and accumulates its contents (cm³)
+      const container = pickContainer(item1, item2, mergeRule)
+      const other = container === item1 ? item2 : item1
+      const capacity = getCapacity(container) ?? getCapacity(other)
+      const contents =
+        getContents(item1) + getContents(item2) + (toCm3(volume, unit) || 0)
+
+      setDroppedItems((currentItems) => {
+        const filteredItems = currentItems.filter(
+          (item) => item.id !== item1.id && item.id !== item2.id
+        )
+        const formattedVolume = formatWithPrecision(volume, precision)
+        const mergedItem = {
+          id: `merged-${Date.now()}`,
+          name: mergeRule.result.name, // Keep the original name for matching
+          displayName:
+            volume > 0
+              ? `${formattedVolume} ${unit} of ${mergeRule.result.name}`
+              : mergeRule.result.name,
+          type: item1.type,
+          position: {
+            x: (item1.position.x + item2.position.x) / 2,
+            y: (item1.position.y + item2.position.y) / 2,
+          },
+          image: mergeRule.result.image,
+          volume: volume,
+          unit: unit,
+          capacity: capacity,
+          contents: contents,
+          precision: precision,
+          phValue: finalPh,
+          reactionResult: reactionResult,
+        }
+        return [...filteredItems, mergedItem]
+      })
+
+      setIsCalculating(false)
+
+      if (reactionResult) {
+        const feedback = formatReactionFeedback(reactionResult)
+        showModal('Chemical Reaction Occurred!', mergeRule.result.name, feedback)
+      }
     },
-    []
+    [substances, showModal]
   )
 
   const endDrag = useCallback(() => {
@@ -367,11 +429,11 @@ function AnimationBox(props: any) {
                   setVolumeDialogData((prev) => ({ ...prev, isOpen: false }))
                 },
                 maxVolume: maxVolume,
-                recommendedVolume: recommendedVolume,
                 capacity: capacity,
                 contents: contents,
                 precision: precision,
                 instrumentName: measuringTool?.name || '',
+                phValue: currentItem?.phValue ?? item?.phValue ?? null,
               })
             } else {
               setTimeout(
@@ -554,6 +616,11 @@ function AnimationBox(props: any) {
             <p className="text-sm font-medium[] truncate text-center">
               {item.displayName || item.name}
               {item?.formula && <TokenizeFormula formula={item?.formula} />}
+              {item?.phValue != null && (
+                <span className="ml-1 text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-mono">
+                  pH {Number(item.phValue).toFixed(1)}
+                </span>
+              )}
             </p>
           </div>
         ))
@@ -585,11 +652,11 @@ function AnimationBox(props: any) {
         onClose={volumeDialogData.onCancel}
         onConfirm={volumeDialogData.onConfirm}
         maxVolume={volumeDialogData.maxVolume}
-        recommendedVolume={volumeDialogData.recommendedVolume}
         capacity={volumeDialogData.capacity}
         contents={volumeDialogData.contents}
         precision={volumeDialogData.precision}
         instrumentName={volumeDialogData.instrumentName}
+        phValue={volumeDialogData.phValue}
       />
       {contextMenu.visible && (
         <ContextMenu

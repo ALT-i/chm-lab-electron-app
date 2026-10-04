@@ -9,6 +9,7 @@ const BeakerGauge = ({
   isOverRecommended,
   contents = 0,
   precision = null,
+  phValue = null,
 }) => {
   const fillPercentage = Math.min(((contents + volume) / maxVolume) * 100, 100)
   const fillHeight = 120 * (fillPercentage / 100)
@@ -82,7 +83,13 @@ const BeakerGauge = ({
       </g>
 
       {/* Text */}
-      <text x="40" y="72" textAnchor="middle" fill="#444" fontFamily="Arial">
+      <text
+        x="40"
+        y={phValue != null ? '66' : '72'}
+        textAnchor="middle"
+        fill="#444"
+        fontFamily="Arial"
+      >
         <tspan fontSize="14">
           {precision != null
             ? formatWithPrecision(volume, precision)
@@ -98,9 +105,15 @@ const BeakerGauge = ({
             : formatNumber(maxVolume)}{' '}
           {unit}
         </tspan>
+        {phValue != null && (
+          <tspan x="40" dy="13" fontSize="9" fill="#1e40af" fontWeight="bold">
+            pH {Number(phValue).toFixed(1)}
+          </tspan>
+        )}
       </text>
     </svg>
   )
 }
 
 export default BeakerGauge
+

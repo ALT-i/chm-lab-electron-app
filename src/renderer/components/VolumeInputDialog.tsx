@@ -17,6 +17,7 @@ const VolumeInputDialog = ({
   contents = 0,
   precision = 0.5 as number,
   instrumentName = '' as string,
+  phValue = null as number | null,
 }) => {
   const [volume, setVolume] = useState(0)
   const [unit, setUnit] = useState('cm³')
@@ -70,6 +71,7 @@ const VolumeInputDialog = ({
               unit="cm³"
               isOverRecommended={isOutsideTolerance}
               precision={precision}
+              phValue={phValue}
             />
           </div>
           <div className="flex-1">
