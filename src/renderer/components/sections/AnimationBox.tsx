@@ -32,6 +32,10 @@ import {
 } from '../../utils/lab-grading'
 
 
+// Minimum time the "Computing..." overlay shows for a merge (the original 1 s merge delay),
+// so students can see that something happened.
+const MIN_COMPUTING_MS = 1000
+
 interface Item {
   type: string
   id: string
@@ -245,6 +249,7 @@ function AnimationBox(props: any) {
   const mergeItems = useCallback(
     async (item1, item2, mergeRule, volume, unit, precision = 0.5) => {
       setIsCalculating(true)
+      const startedAt = Date.now()
       console.log('Merging', item1, item2)
 
       let reactionResult = null
@@ -288,6 +293,13 @@ function AnimationBox(props: any) {
         } catch (err) {
           console.warn('Reaction calculation error:', err)
         }
+      }
+
+      // Keep the "Computing..." overlay up for at least MIN_COMPUTING_MS so students see that
+      // the merge happened; without a reaction calculation a merge is otherwise instant.
+      const remaining = MIN_COMPUTING_MS - (Date.now() - startedAt)
+      if (remaining > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remaining))
       }
 
       // The result keeps the container's capacity and accumulates its contents (cm³)
@@ -534,7 +546,6 @@ function AnimationBox(props: any) {
                       completedSteps: procedureSteps.steps.length,
                       grading: dynamicGrade,
                     }
-                    setIsCalculating(false)
                     setCurrentStepIndex(currentStepIndex + 1)
                     setIsExperimentCompleted(true)
                     if (onExperimentComplete)
@@ -610,7 +621,6 @@ function AnimationBox(props: any) {
                   completedSteps: procedureSteps.steps.length,
                   grading: dynamicGrade,
                 }
-                setIsCalculating(false)
                 setCurrentStepIndex(currentStepIndex + 1)
                 setIsExperimentCompleted(true)
                 if (onExperimentComplete)
