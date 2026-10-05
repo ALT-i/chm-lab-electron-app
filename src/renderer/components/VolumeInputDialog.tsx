@@ -12,6 +12,7 @@ const VolumeInputDialog = ({
   onClose,
   onConfirm,
   maxVolume,
+  limitedBy = 'container' as 'container' | 'burette',
   recommendedVolume,
   capacity = null as number | null,
   contents = 0,
@@ -120,8 +121,15 @@ const VolumeInputDialog = ({
             </select>
             {exceedsMax && (
               <p className="text-red-600 text-xs font-medium mt-2">
-                ⚠️ Overflow: at most {formatWithPrecision(maxVolume, precision)}{' '}
-                cm³ more fits in this container.
+                {limitedBy === 'burette'
+                  ? `⚠️ The burette only holds ${formatWithPrecision(
+                      maxVolume,
+                      precision
+                    )} cm³.`
+                  : `⚠️ Overflow: at most ${formatWithPrecision(
+                      maxVolume,
+                      precision
+                    )} cm³ more fits in this container.`}
               </p>
             )}
             {recommendedVolume != null && (

@@ -7,7 +7,9 @@ import {
   LEGACY_RECOMMENDED_VOLUME,
   formatNumber,
   formatSubstanceLabel,
+  formatVolumeCaption,
   getCapacity,
+  getMergedCapacity,
   getMergedContents,
   getPourLimits,
   getStepTolerance,
@@ -84,10 +86,18 @@ test('recommended volume comes from the merge rule targetVolume', () => {
   )
 })
 
-test('unknown capacity falls back to the legacy 500 / 200 limits', () => {
+test('unknown capacity falls back to the legacy max and sets no target of its own', () => {
   const limits = getPourLimits(thermometer)
   assert.equal(limits.maxVolume, LEGACY_MAX_VOLUME)
-  assert.equal(limits.recommendedVolume, LEGACY_RECOMMENDED_VOLUME)
+  assert.equal(limits.recommendedVolume, null)
+})
+
+test('a 25 cm³ pipette draw is accepted when the step sets no targetVolume', () => {
+  const pipette = { name: '5ml Pippette', type: 'TOOL', volume: null }
+  const limits = getPourLimits(pipette, {})
+  assert.equal(limits.recommendedVolume, null)
+  assert.ok(limits.maxVolume >= 25)
+  assert.notEqual(limits.recommendedVolume, LEGACY_RECOMMENDED_VOLUME)
 })
 
 test('Exp 5A: a 1000 cm³ targetVolume fits an unknown-capacity container', () => {
@@ -121,6 +131,16 @@ test('capacity is read from the apparatus name when volume is missing', () => {
   )
 })
 
+test('a volume of 0 means capacity is not set, so the legacy fallback applies', () => {
+  const dish = { name: 'Evaporating Dish', type: 'TOOL', volume: 0 }
+  assert.equal(getCapacity(dish), null)
+  assert.equal(getPourLimits(dish).maxVolume, LEGACY_MAX_VOLUME)
+  assert.equal(
+    getCapacity({ name: '250cm3 Conical Flask', type: 'TOOL', volume: 0 }),
+    250
+  )
+})
+
 test('pipettes are unconstrained so 25 cm³ transfers with the 5ml Pippette work', () => {
   const pipette = { name: '5ml Pippette', type: 'TOOL', volume: null }
   assert.equal(getCapacity(pipette), null)
@@ -144,6 +164,30 @@ test('merged contents: heating or a transfer keeps the liquid of both items', ()
   const pipetteSolution = { name: 'NaOH (pipetted)', capacity: null, contents: 25 }
   const flaskWith10 = { name: 'Flask', capacity: 250, contents: 10 }
   assert.equal(getMergedContents(flaskWith10, pipetteSolution, 0), 35)
+})
+
+test('a result does not inherit the capacity of the burette that dispensed into it', () => {
+  const cup = { name: 'Sodium Hydroxide Solution in Cup', capacity: null, contents: 50 }
+  const burette = { name: 'HCl solution in Burette', capacity: 50, contents: 50 }
+  assert.equal(getMergedCapacity(cup, burette), null)
+  const beaker = { name: '400cm3 Beaker', type: 'TOOL', volume: 400 }
+  assert.equal(getMergedCapacity({ name: 'NaCl', type: 'SUBSTANCE' }, beaker), 400)
+})
+
+test('volume caption drops a volume already written into the result name', () => {
+  assert.equal(
+    formatVolumeCaption(100, '1000cm3 of Hydrochloric Acid', 0.5),
+    '100.0 cm³ of Hydrochloric Acid'
+  )
+  assert.equal(
+    formatVolumeCaption(25, '25cm3 Oxalic Acid Solution in Conical Flask', 5),
+    '25 cm³ of Oxalic Acid Solution in Conical Flask'
+  )
+  assert.equal(
+    formatVolumeCaption(25, 'Pipette with 25cm3 Oxalic Acid', 0.05),
+    '25.00 cm³ of Pipette with 25cm3 Oxalic Acid'
+  )
+  assert.equal(formatVolumeCaption(0, 'Sodium Carbonate', 0.5), 'Sodium Carbonate')
 })
 
 test('step tolerance prefers the merge rule over instrument precision', () => {
@@ -181,6 +225,56 @@ test('pickContainer uses the merge rule apparatus name', () => {
   }
   assert.equal(pickContainer(indicator, merged, rule), merged)
   assert.equal(pickContainer(merged, indicator, rule), merged)
+})
+
+test('pickContainer: a filled burette titrates into the flask, whichever way round the rule is', () => {
+  const burette = {
+    name: 'Sodium Hydroxide Solution in Burette',
+    type: 'SUBSTANCE',
+    image: 'https://example.com/media/substances/50mLBurette_kH9ugGL.svg',
+    capacity: 50,
+    contents: 50,
+  }
+  const flask = {
+    name: '25cm3 of HCl with Phenolphthalein',
+    type: 'SUBSTANCE',
+    capacity: 250,
+    contents: 25,
+  }
+  const rule = { with: { apparatus: burette.name, substance: flask.name } }
+  assert.equal(pickContainer(flask, burette, rule), flask)
+  assert.equal(pickContainer(burette, flask, rule), flask)
+  assert.equal(getPourLimits(pickContainer(flask, burette, rule), rule).maxVolume, 225)
+})
+
+test('a titration cannot pour more than the burette holds', () => {
+  const burette = {
+    name: 'Sodium Hydroxide Solution in Burette',
+    image: 'https://example.com/media/substances/50mLBurette_kH9ugGL.svg',
+    capacity: 50,
+    contents: 30,
+  }
+  const flask = { name: 'HCl with Phenolphthalein', capacity: 250, contents: 25 }
+  const limits = getPourLimits(flask, {}, burette)
+  assert.equal(limits.maxVolume, 30)
+  assert.equal(limits.limitedBy, 'burette')
+
+  // Room in the flask is the tighter limit
+  const nearlyFull = { name: 'Almost full', capacity: 250, contents: 240 }
+  const tight = getPourLimits(nearlyFull, {}, burette)
+  assert.equal(tight.maxVolume, 10)
+  assert.equal(tight.limitedBy, 'container')
+
+  // Pouring from a stockroom substance is not limited by any burette
+  const naoh = { name: 'Sodium Hydroxide', type: 'SUBSTANCE' }
+  assert.equal(getPourLimits(flask, {}, naoh).limitedBy, 'container')
+})
+
+test('pickContainer: filling an empty burette from the stockroom keeps the burette', () => {
+  const burette = { name: '50ml Burrette', type: 'TOOL', volume: null }
+  const naoh = { name: 'Sodium Hydroxide', type: 'SUBSTANCE' }
+  const rule = { with: { apparatus: '50ml Burrette', substance: 'Sodium Hydroxide' } }
+  assert.equal(pickContainer(naoh, burette, rule), burette)
 })
 
 test('pickContainer falls back to the non-substance item', () => {
