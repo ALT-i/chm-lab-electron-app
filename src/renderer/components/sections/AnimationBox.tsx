@@ -20,6 +20,7 @@ import {
   getMergedContents,
   getPourLimits,
   getStepTolerance,
+  isLiquidSource,
   pickContainer,
   toCm3,
 } from '../../utils/lab-measurements'
@@ -363,7 +364,15 @@ function AnimationBox(props: any) {
 
             const isHeating = isHeatingTool(currentItem) || isHeatingTool(item)
 
-            if (!isHeating && (currentItem.type === 'SUBSTANCE' || item.type === 'SUBSTANCE')) {
+            // Placing an object (wire, metal strip, thermometer) into a container pours
+            // nothing, so it goes through the no-dialog path and keeps the container's liquid.
+            const receiver = pickContainer(currentItem, item, mergeRule)
+            const addedItem = receiver === currentItem ? item : currentItem
+            const isPour =
+              (currentItem.type === 'SUBSTANCE' || item.type === 'SUBSTANCE') &&
+              isLiquidSource(addedItem)
+
+            if (!isHeating && isPour) {
               console.log('SUBSTANCE dropped, opening volume dialog')
               const container = pickContainer(currentItem, item, mergeRule)
               const measuringTool =

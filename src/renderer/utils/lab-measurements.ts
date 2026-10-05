@@ -57,6 +57,16 @@ export function getContents(item: any): number {
   return item?.contents ?? 0
 }
 
+// Whether an item can be poured from: a stockroom substance (merged results always carry
+// `capacity`), or a vessel already holding liquid such as a filled pipette or burette.
+// Objects holding nothing — a wire, metal strip, thermometer, stirrer — are placed into a
+// container rather than poured, so no volume is asked for.
+export function isLiquidSource(item: any): boolean {
+  const isStockroomSubstance =
+    item?.type === 'SUBSTANCE' && !('capacity' in item)
+  return isStockroomSubstance || getContents(item) > 0
+}
+
 // Liquid in the result of a merge, in cm³. A pour adds to what the receiving container
 // already holds; combining two vessels without a pour (a transfer, heating) keeps the
 // liquid of both.

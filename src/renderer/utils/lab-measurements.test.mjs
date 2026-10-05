@@ -13,6 +13,7 @@ import {
   getMergedContents,
   getPourLimits,
   getStepTolerance,
+  isLiquidSource,
   parseCapacityFromName,
   pickContainer,
   toCm3,
@@ -188,6 +189,26 @@ test('volume caption drops a volume already written into the result name', () =>
     '25.00 cm³ of Pipette with 25cm3 Oxalic Acid'
   )
   assert.equal(formatVolumeCaption(0, 'Sodium Carbonate', 0.5), 'Sodium Carbonate')
+})
+
+test('only stockroom substances and vessels holding liquid are poured from', () => {
+  // Poured: stockroom substance, filled pipette, filled burette
+  assert.equal(isLiquidSource({ name: 'Methyl Orange', type: 'SUBSTANCE' }), true)
+  assert.equal(
+    isLiquidSource({ name: 'Pipette with 25cm3 NaOH', type: 'SUBSTANCE', capacity: null, contents: 25 }),
+    true
+  )
+  // Placed, not poured: raw apparatus and merged objects holding no liquid
+  assert.equal(isLiquidSource({ name: 'Thermometer', type: 'TOOL', volume: null }), false)
+  assert.equal(isLiquidSource({ name: 'Zinc Strip', type: 'TOOL', volume: null }), false)
+  assert.equal(
+    isLiquidSource({ name: 'Copper Wire', type: 'TOOL', capacity: null, contents: 0 }),
+    false
+  )
+  assert.equal(
+    isLiquidSource({ name: 'Hot Copper Wire', type: 'SUBSTANCE', capacity: null, contents: 0 }),
+    false
+  )
 })
 
 test('step tolerance prefers the merge rule over instrument precision', () => {
