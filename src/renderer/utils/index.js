@@ -1,8 +1,8 @@
 import React from 'react'
 
 const server = {
-  absolute_url: 'http://localhost:8001',
-  // absolute_url: 'https://chem-lab-backend.onrender.com',
+  // absolute_url: 'http://localhost:8001',
+  absolute_url: 'https://chem-lab-backend.onrender.com',
   ip: '',
   auth_signin: 'api/v1/login/',
   auth_signup: 'api/v1/register/',
