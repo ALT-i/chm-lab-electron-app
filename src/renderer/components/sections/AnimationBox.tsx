@@ -14,10 +14,13 @@ import {
   formatWithPrecision,
   getCapacity,
   getContents,
+  formatVolumeCaption,
   getInstrumentPrecision,
+  getMergedCapacity,
   getMergedContents,
   getPourLimits,
   getStepTolerance,
+  isLiquidSource,
   pickContainer,
   toCm3,
 } from '../../utils/lab-measurements'
@@ -28,6 +31,10 @@ import {
   GradeEvaluation,
 } from '../../utils/lab-grading'
 
+
+// Minimum time the "Computing..." overlay shows for a merge (the original 1 s merge delay),
+// so students can see that something happened.
+const MIN_COMPUTING_MS = 1000
 
 interface Item {
   type: string
@@ -67,6 +74,7 @@ function AnimationBox(props: any) {
     onConfirm: null as any,
     onCancel: null as any,
     maxVolume: null as number | null,
+    limitedBy: 'container' as 'container' | 'burette',
     recommendedVolume: 0 as number | null,
     capacity: null as number | null,
     contents: 0,
@@ -122,14 +130,15 @@ function AnimationBox(props: any) {
       prevItems.map((it) => {
         if (it.id === contextMenu.currentItem.id) {
           const precision = it.precision || 0.5
-          const formattedVol = formatWithPrecision(volNum, precision)
-          const baseName = it.name || 'Solution'
           return {
             ...it,
             volume: volNum,
             contents: volNum,
-            displayName:
-              volNum > 0 ? `${formattedVol} cm³ of ${baseName}` : baseName,
+            displayName: formatVolumeCaption(
+              volNum,
+              it.name || 'Solution',
+              precision
+            ),
           }
         }
         return it
@@ -184,8 +193,11 @@ function AnimationBox(props: any) {
       const newX = Math.min(Math.max(dropX, 0), boxRect.width - 100)
       const newY = Math.min(Math.max(dropY, 0), boxRect.height - 100)
 
+      // Every drop is a separate piece of apparatus: the stockroom id alone is shared by
+      // all copies (e.g. three test tubes), so merging one would remove them all.
       const newItem = {
         ...item,
+        id: `${item.id}-${generateUniqueId()}`,
         position: { x: newX, y: newY },
       }
 
@@ -237,6 +249,7 @@ function AnimationBox(props: any) {
   const mergeItems = useCallback(
     async (item1, item2, mergeRule, volume, unit, precision = 0.5) => {
       setIsCalculating(true)
+      const startedAt = Date.now()
       console.log('Merging', item1, item2)
 
       let reactionResult = null
@@ -282,10 +295,17 @@ function AnimationBox(props: any) {
         }
       }
 
+      // Keep the "Computing..." overlay up for at least MIN_COMPUTING_MS so students see that
+      // the merge happened; without a reaction calculation a merge is otherwise instant.
+      const remaining = MIN_COMPUTING_MS - (Date.now() - startedAt)
+      if (remaining > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remaining))
+      }
+
       // The result keeps the container's capacity and accumulates its contents (cm³)
       const container = pickContainer(item1, item2, mergeRule)
       const other = container === item1 ? item2 : item1
-      const capacity = getCapacity(container) ?? getCapacity(other)
+      const capacity = getMergedCapacity(container, other)
 
       const pouredCm3 = toCm3(volume, unit) || 0
       const totalVolume = getMergedContents(container, other, pouredCm3)
@@ -294,14 +314,14 @@ function AnimationBox(props: any) {
         const filteredItems = currentItems.filter(
           (item) => item.id !== item1.id && item.id !== item2.id
         )
-        const formattedVolume = formatWithPrecision(totalVolume, precision)
         const mergedItem = {
           id: `merged-${Date.now()}`,
           name: mergeRule.result.name, // Keep the original name for matching
-          displayName:
-            totalVolume > 0
-              ? `${formattedVolume} cm³ of ${mergeRule.result.name}`
-              : mergeRule.result.name,
+          displayName: formatVolumeCaption(
+            totalVolume,
+            mergeRule.result.name,
+            precision
+          ),
           type: item1.type,
           position: {
             x: (item1.position.x + item2.position.x) / 2,
@@ -356,7 +376,15 @@ function AnimationBox(props: any) {
 
             const isHeating = isHeatingTool(currentItem) || isHeatingTool(item)
 
-            if (!isHeating && (currentItem.type === 'SUBSTANCE' || item.type === 'SUBSTANCE')) {
+            // Placing an object (wire, metal strip, thermometer) into a container pours
+            // nothing, so it goes through the no-dialog path and keeps the container's liquid.
+            const receiver = pickContainer(currentItem, item, mergeRule)
+            const addedItem = receiver === currentItem ? item : currentItem
+            const isPour =
+              (currentItem.type === 'SUBSTANCE' || item.type === 'SUBSTANCE') &&
+              isLiquidSource(addedItem)
+
+            if (!isHeating && isPour) {
               console.log('SUBSTANCE dropped, opening volume dialog')
               const container = pickContainer(currentItem, item, mergeRule)
               const measuringTool =
@@ -366,8 +394,14 @@ function AnimationBox(props: any) {
                   ? item
                   : currentItem
               const precision = getInstrumentPrecision(measuringTool)
-              const { maxVolume, recommendedVolume, capacity, contents } =
-                getPourLimits(container, mergeRule)
+              const source = container === currentItem ? item : currentItem
+              const {
+                maxVolume,
+                recommendedVolume,
+                capacity,
+                contents,
+                limitedBy,
+              } = getPourLimits(container, mergeRule, source)
               const tolerance = getStepTolerance(mergeRule, precision)
 
               setVolumeDialogData({
@@ -376,6 +410,22 @@ function AnimationBox(props: any) {
                   const volumeCm3 = toCm3(volume, unit)
 
                   if (volumeCm3 <= 0) return
+
+                  if (volumeCm3 > maxVolume + 1e-6 && limitedBy === 'burette') {
+                    setVolumeDialogData((prev) => ({ ...prev, isOpen: false }))
+                    showModal(
+                      'Not Enough in the Burette!',
+                      `${source?.name} only holds ${formatWithPrecision(
+                        maxVolume,
+                        precision
+                      )} cm³.`,
+                      `You cannot run ${formatWithPrecision(
+                        volumeCm3,
+                        precision
+                      )} cm³ from it. Refill the burette or enter a smaller titre.`
+                    )
+                    return
+                  }
 
                   if (volumeCm3 > maxVolume + 1e-6) {
                     setVolumeDialogData((prev) => ({ ...prev, isOpen: false }))
@@ -496,7 +546,6 @@ function AnimationBox(props: any) {
                       completedSteps: procedureSteps.steps.length,
                       grading: dynamicGrade,
                     }
-                    setIsCalculating(false)
                     setCurrentStepIndex(currentStepIndex + 1)
                     setIsExperimentCompleted(true)
                     if (onExperimentComplete)
@@ -520,6 +569,7 @@ function AnimationBox(props: any) {
                   setVolumeDialogData((prev) => ({ ...prev, isOpen: false }))
                 },
                 maxVolume: maxVolume,
+                limitedBy: limitedBy,
                 recommendedVolume: recommendedVolume,
                 capacity: capacity,
                 contents: contents,
@@ -571,7 +621,6 @@ function AnimationBox(props: any) {
                   completedSteps: procedureSteps.steps.length,
                   grading: dynamicGrade,
                 }
-                setIsCalculating(false)
                 setCurrentStepIndex(currentStepIndex + 1)
                 setIsExperimentCompleted(true)
                 if (onExperimentComplete)
@@ -789,6 +838,7 @@ function AnimationBox(props: any) {
         onClose={volumeDialogData.onCancel}
         onConfirm={volumeDialogData.onConfirm}
         maxVolume={volumeDialogData.maxVolume}
+        limitedBy={volumeDialogData.limitedBy}
         recommendedVolume={volumeDialogData.recommendedVolume}
         capacity={volumeDialogData.capacity}
         contents={volumeDialogData.contents}

@@ -3,6 +3,8 @@
 
 // Used when a container's capacity is unknown (apparatus without a volume, legacy data).
 export const LEGACY_MAX_VOLUME = 500
+// Not enforced or shown: a step only has a target when its merge rule sets targetVolume,
+// so students are never held to an amount their written procedure doesn't mention.
 export const LEGACY_RECOMMENDED_VOLUME = 200
 
 const CM3_PER_UNIT: Record<string, number> = { 'cm³': 1, 'dm³': 1000 }
@@ -34,14 +36,17 @@ export function parseCapacityFromName(name?: string | null): number | null {
 
 // Capacity in cm³, or null when unknown.
 // Merged items carry `capacity` explicitly; raw apparatus (TOOL) use their `volume` field,
-// falling back to a size in the name. Pipettes are left unconstrained: the curriculum has
-// students transfer 25 cm³ with the '5ml Pippette' in a single step.
+// falling back to a size in the name. A volume of 0 means "not set" (the CMS stores 0 for
+// e.g. the Evaporating Dish and Funnel), not a container that holds nothing.
+// Pipettes are left unconstrained: the curriculum has students transfer 25 cm³ with the
+// '5ml Pippette' in a single step.
 export function getCapacity(item: any): number | null {
   if (!item) return null
   if ('capacity' in item) return item.capacity ?? null
   if (item.type === 'TOOL') {
     if (isPipette(item)) return null
-    return item.volume ?? parseCapacityFromName(item.name)
+    if (item.volume > 0) return item.volume
+    return parseCapacityFromName(item.name)
   }
   return null
 }
@@ -50,6 +55,16 @@ export function getCapacity(item: any): number | null {
 // so liquid only ever comes from `contents`.
 export function getContents(item: any): number {
   return item?.contents ?? 0
+}
+
+// Whether an item can be poured from: a stockroom substance (merged results always carry
+// `capacity`), or a vessel already holding liquid such as a filled pipette or burette.
+// Objects holding nothing — a wire, metal strip, thermometer, stirrer — are placed into a
+// container rather than poured, so no volume is asked for.
+export function isLiquidSource(item: any): boolean {
+  const isStockroomSubstance =
+    item?.type === 'SUBSTANCE' && !('capacity' in item)
+  return isStockroomSubstance || getContents(item) > 0
 }
 
 // Liquid in the result of a merge, in cm³. A pour adds to what the receiving container
@@ -64,6 +79,30 @@ export function getMergedContents(
   return getContents(container) + getContents(other)
 }
 
+// Capacity of a merge result: the receiving container's, else the other item's — except a
+// burette that dispensed into the container, whose 50 cm³ says nothing about the result.
+export function getMergedCapacity(container: any, other: any): number | null {
+  const own = getCapacity(container)
+  if (own !== null) return own
+  return isBurette(other) ? null : getCapacity(other)
+}
+
+// Workbench caption, e.g. "100 cm³ of Hydrochloric Acid". Result names authored with a
+// volume up front ("1000cm3 of Hydrochloric Acid") would otherwise read
+// "100 cm³ of 1000cm3 of Hydrochloric Acid", so that leading volume is dropped.
+export function formatVolumeCaption(
+  volume: number,
+  name: string,
+  precision: number
+): string {
+  if (!(volume > 0)) return name
+  const baseName = name.replace(
+    /^\s*\d+(?:\.\d+)?\s*(?:cm3|cm³|ml)\s+(?:of\s+)?/i,
+    ''
+  )
+  return `${formatWithPrecision(volume, precision)} cm³ of ${baseName}`
+}
+
 // Tolerance a step allows around its target volume, in cm³.
 export function getStepTolerance(mergeRule: any, precision: number): number {
   return mergeRule?.tolerance ?? precision
@@ -74,34 +113,80 @@ export interface PourLimits {
   contents: number
   maxVolume: number
   recommendedVolume: number | null
+  // What sets maxVolume: the space left in the container, or the liquid left in the
+  // burette pouring into it.
+  limitedBy: 'container' | 'burette'
 }
 
 // A step's targetVolume always fits: the merge rule is authoritative even when the
-// container's recorded capacity disagrees with it.
-export function getPourLimits(container: any, mergeRule?: any): PourLimits {
+// container's recorded capacity disagrees with it. When the liquid comes from a filled
+// burette (a titration), no more can be poured than the burette holds.
+export function getPourLimits(
+  container: any,
+  mergeRule?: any,
+  source?: any
+): PourLimits {
   const capacity = getCapacity(container)
   const contents = getContents(container)
-  const recommendedVolume =
-    mergeRule?.targetVolume ??
-    (capacity === null ? LEGACY_RECOMMENDED_VOLUME : null)
+  const recommendedVolume = mergeRule?.targetVolume ?? null
   const spaceLeft =
     capacity === null ? LEGACY_MAX_VOLUME : Math.max(capacity - contents, 0)
+  const containerMax = Math.max(spaceLeft, recommendedVolume ?? 0)
+
+  const buretteHolds =
+    isBurette(source) && getContents(source) > 0 ? getContents(source) : null
+  if (buretteHolds !== null && buretteHolds < containerMax) {
+    return {
+      capacity,
+      contents,
+      maxVolume: buretteHolds,
+      recommendedVolume,
+      limitedBy: 'burette',
+    }
+  }
 
   return {
     capacity,
     contents,
-    maxVolume: Math.max(spaceLeft, recommendedVolume ?? 0),
+    maxVolume: containerMax,
     recommendedVolume,
+    limitedBy: 'container',
   }
 }
 
+// A burette, or a solution held in one (merged results keep the burette image).
+export function isBurette(item: any): boolean {
+  return (
+    BURETTE_PATTERN.test(item?.name || '') ||
+    BURETTE_PATTERN.test(item?.image || '')
+  )
+}
+
+// Apparatus or a merged solution (merged results carry `capacity`); not a stockroom substance.
+function isVessel(item: any): boolean {
+  return item?.type === 'TOOL' || (!!item && 'capacity' in item)
+}
+
 // In a merge rule, `with.apparatus` names the receiving container. Falls back to the
-// non-substance item for rules that don't match either name.
+// non-substance item for rules that don't match either name. A filled burette always
+// dispenses into the other vessel (a titration), whichever way round the rule names them.
 export function pickContainer(item1: any, item2: any, mergeRule?: any): any {
   const apparatusName = mergeRule?.with?.apparatus
-  if (apparatusName === item1?.name) return item1
-  if (apparatusName === item2?.name) return item2
-  return item1?.type === 'SUBSTANCE' ? item2 : item1
+  let container
+  if (apparatusName === item1?.name) container = item1
+  else if (apparatusName === item2?.name) container = item2
+  else container = item1?.type === 'SUBSTANCE' ? item2 : item1
+
+  const other = container === item1 ? item2 : item1
+  if (
+    isBurette(container) &&
+    getContents(container) > 0 &&
+    isVessel(other) &&
+    !isBurette(other)
+  ) {
+    return other
+  }
+  return container
 }
 
 // Up to 2 decimal places, without trailing zeros: 7.4 -> "7.4", 1.0 -> "1", 12.345 -> "12.35".
