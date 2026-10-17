@@ -49,6 +49,11 @@ interface Item {
   volume?: number
 }
 
+// Bench items render at 10em square (see the <img> below). Overlap detection
+// and the drag clamp previously assumed 100px, which is why dropping one item
+// onto another did not register as touching.
+const ITEM_SIZE = 160
+
 function AnimationBox(props: any) {
   const { procedure: procedureSteps, panel, onExperimentComplete, substances } = props
 
@@ -190,7 +195,7 @@ function AnimationBox(props: any) {
         : boxRect.height / 2 - ITEM_HALF_SIZE
 
       // Same bounds as dragging on the workbench
-      const newX = Math.min(Math.max(dropX, 0), boxRect.width - 100)
+      const newX = Math.min(Math.max(dropX, 0), boxRect.width - ITEM_SIZE)
       const newY = Math.min(Math.max(dropY, 0), boxRect.height - 100)
 
       // Every drop is a separate piece of apparatus: the stockroom id alone is shared by
@@ -232,8 +237,8 @@ function AnimationBox(props: any) {
         .querySelector('.animation-box')
         ?.getBoundingClientRect()
 
-      newX = Math.min(Math.max(newX, 0), boxRect.width - 100) // Assuming item width is 100px
-      newY = Math.min(Math.max(newY, 0), boxRect.height - 100) // Assuming item height is 100px
+      newX = Math.min(Math.max(newX, 0), boxRect.width - ITEM_SIZE)
+      newY = Math.min(Math.max(newY, 0), boxRect.height - ITEM_SIZE)
 
       setDroppedItems((items) =>
         items.map((item) =>
@@ -241,6 +246,12 @@ function AnimationBox(props: any) {
             ? { ...item, position: { x: newX, y: newY } }
             : item
         )
+      )
+
+      // Keep currentItem in step with the position just written: endDrag
+      // tests overlap against it, so without this a merge can never fire.
+      setCurrentItem((item) =>
+        item ? { ...item, position: { x: newX, y: newY } } : item
       )
     },
     [dragging, currentItem, offset]
@@ -657,14 +668,14 @@ function AnimationBox(props: any) {
     const rect1 = {
       x: item1.position.x,
       y: item1.position.y,
-      width: 100, // Assuming item width is 100px
-      height: 100, // Assuming item height is 100px
+      width: ITEM_SIZE,
+      height: ITEM_SIZE
     }
     const rect2 = {
       x: item2.position.x,
       y: item2.position.y,
-      width: 100, // Assuming item width is 100px
-      height: 100, // Assuming item height is 100px
+      width: ITEM_SIZE,
+      height: ITEM_SIZE
     }
 
     return !(
@@ -793,7 +804,22 @@ function AnimationBox(props: any) {
             <img
               src={item.image}
               alt={item.displayName || item.name}
-              style={{ width: '10em', height: '10em', display: 'block' }}
+              draggable={false}
+              onError={(e) => {
+                // Many lesson procedures point merge results at images that
+                // no longer exist; show the logo rather than a broken icon.
+                const img = e.currentTarget
+                if (img.dataset.fallbackApplied) return
+                img.dataset.fallbackApplied = 'true'
+                img.src = './noun_logo.png'
+              }}
+              style={{
+                width: '10em',
+                height: '10em',
+                display: 'block',
+                userSelect: 'none',
+                WebkitUserDrag: 'none',
+              } as React.CSSProperties}
             />
             <p className="text-sm font-medium[] truncate text-center">
               {item.displayName || item.name}

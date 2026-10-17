@@ -11,7 +11,9 @@ interface DraggableItemProps {
     formula?: string // Assuming formula is optional
   }
   type: 'SUBSTANCE' | 'TOOL'
-  onRightClick: (event: React.MouseEvent, item: any) => void
+  // Optional: the stockroom renders these without a handler, so calling
+  // it unconditionally threw "onRightClick is not a function".
+  onRightClick?: (event: React.MouseEvent, item: any) => void
 }
 
 function DraggableItem({ item, type, onRightClick }: DraggableItemProps) {
@@ -32,7 +34,7 @@ function DraggableItem({ item, type, onRightClick }: DraggableItemProps) {
       style={{ opacity: isDragging ? 0.5 : 1 }}
       onContextMenu={(e) => {
         e.preventDefault()
-        onRightClick(e, item)
+        if (onRightClick) onRightClick(e, item)
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

@@ -237,8 +237,9 @@ function IndexPage(props: any) {
           setClassParameters(res.data.data.parameters)
           setClassTitle(res.data.data.title)
           setClassVideo(res.data.data.video_file)
-          // Safely handle moodle_assignment_id even if field doesn't exist yet
-          setMoodleAssignmentId(res.data.data.moodle_assignment_id || 1) // Default to 1 for now
+          // No fallback: defaulting to 1 silently graded every unlinked
+          // experiment against Experiment 1A's assignment.
+          setMoodleAssignmentId(res.data.data.moodle_assignment_id ?? null)
         })
         .catch((err) => {
           console.error('Error fetching workbench:', err)
