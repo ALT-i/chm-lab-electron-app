@@ -105,7 +105,16 @@ export function formatVolumeCaption(
 
 // Tolerance a step allows around its target volume, in cm³.
 export function getStepTolerance(mergeRule: any, precision: number): number {
-  return mergeRule?.tolerance ?? precision
+  const authored = mergeRule?.tolerance
+  if (authored == null) return precision
+  // A step cannot demand accuracy finer than the instrument can be read.
+  // applyReadingError jitters the recorded value by up to +/-precision, so a
+  // tolerance tighter than that would mark a student down for the
+  // instrument's own uncertainty -- something they cannot influence. A
+  // 400 cm3 beaker reads to about +/-25 cm3, so a step asking for
+  // "20 cm3 +/- 0.5" through a beaker is not a measurement the student got
+  // wrong; it is the wrong vessel for the job.
+  return Math.max(authored, precision)
 }
 
 export interface PourLimits {

@@ -217,6 +217,30 @@ test('step tolerance prefers the merge rule over instrument precision', () => {
   assert.equal(getStepTolerance(undefined, 0.5), 0.5)
 })
 
+test('tolerance is never tighter than the instrument can be read', () => {
+  // A 400 cm3 beaker reads to about +/-25 cm3. applyReadingError jitters the
+  // recorded value by up to that much, so honouring an authored tolerance of
+  // 0.5 would mark the student down for the instrument's own uncertainty.
+  assert.equal(getStepTolerance({ tolerance: 0.5 }, 25), 25)
+  // A burette can genuinely hold 0.05, so a tight authored tolerance stands.
+  assert.equal(getStepTolerance({ tolerance: 0.1 }, 0.05), 0.1)
+})
+
+test('a reading can never fall outside its own tolerance band', () => {
+  // Whatever the instrument, the jitter it introduces must still be
+  // judged acceptable: the student cannot influence it.
+  for (const precision of [0.05, 0.5, 5, 25]) {
+    const tolerance = getStepTolerance({ tolerance: 0.5 }, precision)
+    for (let i = 0; i < 200; i++) {
+      const recorded = applyReadingError(20, precision)
+      assert.ok(
+        Math.abs(recorded - 20) <= tolerance + 1e-9,
+        `precision ${precision}: recorded ${recorded} outside +/-${tolerance}`
+      )
+    }
+  }
+})
+
 test('a fresh 250 mL beaker allows up to 250 cm³', () => {
   assert.equal(getPourLimits(beaker250).maxVolume, 250)
 })
