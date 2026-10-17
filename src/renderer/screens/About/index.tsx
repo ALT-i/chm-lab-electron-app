@@ -18,7 +18,7 @@ import {
 } from '@material-tailwind/react'
 
 // Get version from environment or use a default
-const APP_VERSION = process.env.APP_VERSION || '1.1.5'
+const APP_VERSION = process.env.APP_VERSION || '1.2.0'
 
 export function AboutScreen() {
   const navigate = useNavigate()
