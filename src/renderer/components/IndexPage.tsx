@@ -289,7 +289,9 @@ function IndexPage(props: any) {
     <div className="index-page">
       <div
         className={`main-content index-page-main transition-all duration-300 ease-in-out ${
-          isPanelOpen ? 'ml-52' : 'ml-16'
+          // must match the sidebar's own width (w-64 open / w-16 collapsed);
+          // ml-52 left a 48px strip of the stockroom hidden under the sidebar
+          isPanelOpen ? 'ml-64' : 'ml-16'
         }`}
       >
         <div className="flex bg-green-900 py-5 px-2 shadow-lg rounded-lg">
