@@ -22,6 +22,9 @@ import {
   getPourLimits,
   getStepTolerance,
   mixPh,
+  resolveMeasuringTool,
+  mergeComponents,
+  effervesces,
   isLiquidSource,
   pickContainer,
   toCm3,
@@ -365,6 +368,10 @@ function AnimationBox(props: any) {
           precision: precision,
           phValue: finalPh,
           reactionResult: reactionResult,
+          // what is in this mixture, whatever the lesson renamed it to
+          components: mergeComponents(item1, item2),
+          // carbonate meeting acid: CO2 is given off on contact
+          effervescedAt: effervesces(item1, item2, finalPh) ? Date.now() : null,
         }
         return [...filteredItems, mergedItem]
       })
@@ -417,12 +424,9 @@ function AnimationBox(props: any) {
             if (!isHeating && isPour) {
               console.log('SUBSTANCE dropped, opening volume dialog')
               const container = pickContainer(currentItem, item, mergeRule)
-              const measuringTool =
-                container?.type === 'TOOL'
-                  ? container
-                  : item.type === 'TOOL'
-                  ? item
-                  : currentItem
+              // The pipette or burette that delivers a volume is what measured
+              // it, not the flask it lands in (see resolveMeasuringTool).
+              const measuringTool = resolveMeasuringTool(container, item, currentItem)
               const precision = getInstrumentPrecision(measuringTool)
               const source = container === currentItem ? item : currentItem
               const {

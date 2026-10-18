@@ -382,3 +382,67 @@ export function mixPh(components: MixComponent[]): number | null {
   const ph = net > 0 ? -Math.log10(net) : 14 + Math.log10(-net)
   return Math.round(ph * 100) / 100
 }
+
+// ---------------------------------------------------------------------------
+// Which instrument measured the volume being poured
+// ---------------------------------------------------------------------------
+// The volume that lands in a conical flask was measured by the pipette or
+// burette that delivered it, not by the flask. Ten transfer steps across ten
+// lessons ("transfer 25 cm3 from the pipette into a conical flask") were
+// reading their precision from the flask (+/-5 cm3), so a pipette transfer of
+// 25.00 cm3 recorded anywhere from 20 to 30. A measuring cylinder or beaker
+// that is FILLED from a bottle is still the instrument being read, so the
+// receiving vessel remains the default.
+export function resolveMeasuringTool(
+  container: any,
+  item: any,
+  currentItem: any
+): any {
+  const source = container === currentItem ? item : currentItem
+  if (source && (isPipette(source) || isBurette(source))) return source
+  if (container?.type === 'TOOL') return container
+  if (item?.type === 'TOOL') return item
+  return currentItem
+}
+
+// ---------------------------------------------------------------------------
+// What a mixture contains, through any number of merges
+// ---------------------------------------------------------------------------
+// Merged items are renamed by the lesson ("Solution with Methyl Orange in
+// Conical Flask") and lose any trace of what went into them. Components carry
+// that forward so chemistry can be reasoned about later.
+export function componentsOf(item: any): string[] {
+  if (!item) return []
+  if (Array.isArray(item.components)) return item.components
+  return [item.name, item.formula].filter(Boolean)
+}
+
+export function mergeComponents(a: any, b: any): string[] {
+  return Array.from(new Set([...componentsOf(a), ...componentsOf(b)]))
+}
+
+const CARBONATE_PATTERN = /carbonate|\bCO3\b|Co3\b|HCO3|soda\s*ash/i
+
+export function containsCarbonate(item: any): boolean {
+  return componentsOf(item).some((c) => CARBONATE_PATTERN.test(String(c)))
+}
+
+// ---------------------------------------------------------------------------
+// Effervescence: carbonate meeting acid
+// ---------------------------------------------------------------------------
+// No lesson authors a `reaction` block, so the reaction engine -- the only
+// source of gas products -- never runs, and nothing on the bench ever fizzed.
+// Carbonate (and hydrogencarbonate) liberates CO2 once the solution is driven
+// below carbonic acid's first pKa, about 6.4. So a merge fizzes when one side
+// holds carbonate that has not yet been consumed (its pH is still >= 6.4) and
+// the mixture ends up below 6.4. That fizzes on the first addition of acid,
+// not again when an already-reacted mixture is merely transferred.
+export const CARBONIC_PKA1 = 6.4
+
+export function effervesces(a: any, b: any, mergedPh: number | null): boolean {
+  if (mergedPh == null || !(mergedPh < CARBONIC_PKA1)) return false
+  const unconsumed = (x: any) =>
+    containsCarbonate(x) &&
+    (x?.phValue == null || Number(x.phValue) >= CARBONIC_PKA1)
+  return unconsumed(a) || unconsumed(b)
+}

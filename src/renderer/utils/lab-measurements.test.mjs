@@ -23,6 +23,9 @@ import {
   getInstrumentStep,
   applyReadingError,
   mixPh,
+  resolveMeasuringTool,
+  mergeComponents,
+  effervesces,
   evaluatePourTolerance,
 } from './lab-measurements.ts'
 
@@ -448,4 +451,35 @@ test('a reading error never records a real pour as nothing', () => {
   assert.equal(applyReadingError(0.1, 0.05, () => 0), 0.05)
   // nothing poured stays nothing
   assert.equal(applyReadingError(0, 25, () => 0), 0)
+})
+
+
+test('a volume delivered by pipette or burette is measured by it, not the receiving flask', () => {
+  const flask = { name: '250cm3 Conical Flask', type: 'TOOL', precision: 5 }
+  const pipette = { name: 'Pipette with 25cm3 Sodium Hydroxide', type: 'TOOL', precision: 0.01 }
+  const burette = { name: 'Hydrochloric Acid Solution in Burette', type: 'SUBSTANCE', precision: 0.05 }
+  const hcl = { name: 'Hydrochloric Acid', type: 'SUBSTANCE' }
+  const cylinder = { name: '100cm3 Measuring Cylinder', type: 'TOOL', precision: 0.5 }
+  // either drag direction
+  assert.equal(resolveMeasuringTool(flask, flask, pipette), pipette)
+  assert.equal(resolveMeasuringTool(flask, pipette, flask), pipette)
+  assert.equal(resolveMeasuringTool(flask, flask, burette), burette)
+  // filling a cylinder from a bottle: the cylinder is what is read
+  assert.equal(resolveMeasuringTool(cylinder, cylinder, hcl), cylinder)
+})
+
+test('carbonate fizzes on first contact with acid, not again on transfer', () => {
+  const hcl = { name: 'Hydrochloric Acid', phValue: 1.1 }
+  const na2co3 = { name: 'Sodium Carbonate', formula: 'Na2CO3', phValue: 11.6 }
+  const ph = mixPh([{ volume: 25, ph: 1.1 }, { volume: 25, ph: 11.6 }])
+  assert.ok(effervesces(hcl, na2co3, ph))
+  // the reacted mixture, pipetted elsewhere, has already given off its CO2
+  const reacted = { name: 'reaction mixture', phValue: ph, components: mergeComponents(hcl, na2co3) }
+  assert.ok(!effervesces(reacted, { name: 'Conical Flask' }, ph))
+  // a renamed flask still knows it holds carbonate (second end point, Exp 6)
+  const renamed = { name: 'Solution with Methyl Orange in Conical Flask', phValue: 8.3, components: ['Na2CO3', 'Methyl Orange'] }
+  assert.ok(effervesces(hcl, renamed, 1.7))
+  // no carbonate, or not enough acid to liberate CO2: no fizz
+  assert.ok(!effervesces(hcl, { name: 'Sodium Hydroxide', phValue: 13 }, 1.5))
+  assert.ok(!effervesces(hcl, na2co3, 9.0))
 })

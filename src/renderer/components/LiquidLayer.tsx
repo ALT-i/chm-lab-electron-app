@@ -103,8 +103,28 @@ interface Props {
   size: number // the vessel image is size x size px
 }
 
+// How long a mixture visibly fizzes after carbonate meets acid. A real
+// titration fizzes as acid runs in and settles once it stops.
+const EFFERVESCENCE_MS = 7000
+
+function useRecentlyEffervesced(at: number | null | undefined): boolean {
+  const live = () => !!at && Date.now() - at < EFFERVESCENCE_MS
+  const [on, setOn] = useState(live)
+  useEffect(() => {
+    setOn(live())
+    if (!at) return
+    const left = EFFERVESCENCE_MS - (Date.now() - at)
+    if (left <= 0) return
+    const id = setTimeout(() => setOn(false), left)
+    return () => clearTimeout(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [at])
+  return on
+}
+
 export default function LiquidLayer({ item, size }: Props) {
   const appearance = liquidAppearance(item)
+  const fizzing = useRecentlyEffervesced(item?.effervescedAt)
   const capacity = Number(item?.capacity ?? 0)
   const contents = Number(item?.contents ?? item?.volume ?? 0)
   const bounds = useVesselBounds(item?.image)
@@ -134,7 +154,7 @@ export default function LiquidLayer({ item, size }: Props) {
   const interiorH = vesselH * 0.78
   const liquidH = interiorH * shownFraction
 
-  const bubbles = appearance.bubbling ? [0, 1, 2, 3, 4, 5] : []
+  const bubbles = appearance.bubbling || fizzing ? [0, 1, 2, 3, 4, 5, 6, 7] : []
 
   return (
     <div
