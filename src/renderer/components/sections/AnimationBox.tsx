@@ -58,6 +58,8 @@ interface Item {
 // and the drag clamp previously assumed 100px, which is why dropping one item
 // onto another did not register as touching.
 const ITEM_SIZE = 160
+// Room below an item for its caption, which now wraps to up to three lines.
+const CAPTION_SPACE = 60
 
 function AnimationBox(props: any) {
   const { procedure: procedureSteps, panel, onExperimentComplete, substances } = props
@@ -224,13 +226,13 @@ function AnimationBox(props: any) {
           currentItems.some(
             (o) =>
               Math.abs(o.position.x - px) <= ITEM_SIZE &&
-              Math.abs(o.position.y - py) <= ITEM_SIZE
+              Math.abs(o.position.y - py) <= ITEM_SIZE + CAPTION_SPACE
           )
         for (let i = 0; i < 16 && taken(x, y); i++) {
           x += ITEM_SIZE + 12
           if (x > boxRect.width - ITEM_SIZE) {
             x = 0
-            y = Math.min(y + ITEM_SIZE + 12, boxRect.height - 100)
+            y = Math.min(y + ITEM_SIZE + CAPTION_SPACE, boxRect.height - 100)
           }
         }
         return [...currentItems, { ...newItem, position: { x, y } }]
@@ -886,7 +888,14 @@ function AnimationBox(props: any) {
                 zIndex: 1,
               } as React.CSSProperties}
             />
-            <p className="text-sm font-medium[] truncate text-center">
+            {/* Wrap within the item's own width. Unbounded, a caption ran into
+                its neighbour ("20.2 cm3 of Hydrochloric Ac99.99 cm3..."); and
+                truncating would hide the volume, the number that matters. */}
+            <p
+              className="text-sm font-medium text-center leading-tight mt-1"
+              style={{ width: ITEM_SIZE, whiteSpace: 'normal', overflowWrap: 'anywhere' }}
+              title={item.displayName || item.name}
+            >
               {item.displayName || item.name}
               {item?.formula && <TokenizeFormula formula={item?.formula} />}
               {item?.phValue != null && (
