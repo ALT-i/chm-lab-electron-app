@@ -288,7 +288,15 @@ export function applyReadingError(
   const jittered = volume + offset
   const decimals = getPrecisionDecimals(precision)
   const factor = Math.pow(10, decimals)
-  return Math.round(jittered * factor) / factor
+  const rounded = Math.round(jittered * factor) / factor
+  // A misread can under-report a pour, but it cannot make the liquid
+  // disappear: the recorded value is at least one unit of the instrument's
+  // display precision whenever something was actually poured. Without this
+  // a coarse beaker (+/-25) could record 20 cm3 of acid as 0, and the next
+  // step then mixed water with nothing and reported a neutral pH.
+  if (volume > 0) return Math.max(rounded, 1 / factor)
+  // and a reading of an empty vessel cannot be negative
+  return Math.max(rounded, 0)
 }
 
 export interface ToleranceEvaluation {

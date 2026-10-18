@@ -326,12 +326,12 @@ function AnimationBox(props: any) {
       // Without this, diluting 0.1 M HCl with water reported pH 7.0 -- the
       // water's own pH, inherited because the water happened to be dragged.
       if (reactionResult?.final_ph == null) {
-        const pouredPh = item1?.phValue ?? null
-        const existingPh = item2?.phValue ?? null
-        const existingCm3 = Number(item2?.contents ?? item2?.volume ?? 0) || 0
+        // Use the resolved vessel and substance, not drag order: a student
+        // may drag the beaker onto the acid or the acid onto the beaker.
+        const existingCm3 = Number(container?.contents ?? 0) || 0
         const modelled = mixPh([
-          { volume: pouredCm3, ph: pouredPh },
-          { volume: existingCm3, ph: existingPh },
+          { volume: pouredCm3, ph: other?.phValue ?? null },
+          { volume: existingCm3, ph: container?.phValue ?? null },
         ])
         if (modelled != null) finalPh = modelled
       }

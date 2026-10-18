@@ -438,3 +438,14 @@ test('mixing ignores components with no known pH rather than poisoning the resul
   assert.equal(mixPh([{ volume: 30, ph: null }]), null)
   assert.equal(mixPh([]), null)
 })
+
+
+test('a reading error never records a real pour as nothing', () => {
+  // beaker: +/-25 on a 20 cm3 pour; the floor rng would take it to -5
+  assert.ok(applyReadingError(20, 25, () => 0) > 0)
+  // the floor is one unit of the display precision
+  assert.equal(applyReadingError(20, 25, () => 0), 1)
+  assert.equal(applyReadingError(0.1, 0.05, () => 0), 0.05)
+  // nothing poured stays nothing
+  assert.equal(applyReadingError(0, 25, () => 0), 0)
+})
