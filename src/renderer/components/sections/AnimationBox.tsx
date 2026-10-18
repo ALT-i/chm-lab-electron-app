@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useDrop } from 'react-dnd'
 import TokenizeFormula from '../Formula'
+import LiquidLayer from '../LiquidLayer'
 import ContextMenu from '../ContextMenu'
 import SimpleModal from '../SimpleModal'
 import VolumeInputDialog from '../VolumeInputDialog'
@@ -819,6 +820,9 @@ function AnimationBox(props: any) {
               alignItems: 'center',
             }}
           >
+            {/* liquid is painted behind the transparent vessel artwork, so
+                the outline stays crisp and the contents appear to be inside */}
+            <LiquidLayer item={item} size={ITEM_SIZE} />
             <img
               src={item.image}
               alt={item.displayName || item.name}
@@ -837,6 +841,8 @@ function AnimationBox(props: any) {
                 display: 'block',
                 userSelect: 'none',
                 WebkitUserDrag: 'none',
+                position: 'relative',
+                zIndex: 1,
               } as React.CSSProperties}
             />
             <p className="text-sm font-medium[] truncate text-center">

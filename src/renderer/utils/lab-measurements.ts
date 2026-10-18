@@ -97,10 +97,17 @@ export function formatVolumeCaption(
 ): string {
   if (!(volume > 0)) return name
   const baseName = name.replace(
-    /^\s*\d+(?:\.\d+)?\s*(?:cm3|cm³|ml)\s+(?:of\s+)?/i,
+    /^\s*\d+(?:\.\d+)?\s*(?:cm3|cm³|ml|\(±[^)]*\))\s*(?:\(±[^)]*\)\s*)?(?:of\s+)?/i,
     ''
   )
-  return `${formatWithPrecision(volume, precision)} cm³ of ${baseName}`
+  // "I typed 20 and it says 10": the dialog warned beforehand, but after the
+  // fact nothing explained the gap. State the instrument's uncertainty with
+  // the reading whenever it is coarse enough to matter (>= 1 cm3).
+  const uncertainty = precision >= 1 ? ` (±${formatNumber(precision)})` : ''
+  return `${formatWithPrecision(
+    volume,
+    precision
+  )} cm³${uncertainty} of ${baseName}`
 }
 
 // Tolerance a step allows around its target volume, in cm³.
