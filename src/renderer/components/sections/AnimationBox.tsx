@@ -20,6 +20,7 @@ import {
   getMergedContents,
   getPourLimits,
   getStepTolerance,
+  mixPh,
   isLiquidSource,
   pickContainer,
   toCm3,
@@ -321,6 +322,20 @@ function AnimationBox(props: any) {
       const pouredCm3 = toCm3(volume, unit) || 0
       const totalVolume = getMergedContents(container, other, pouredCm3)
 
+      // No authored reaction: this is mixing, which needs no reaction block.
+      // Without this, diluting 0.1 M HCl with water reported pH 7.0 -- the
+      // water's own pH, inherited because the water happened to be dragged.
+      if (reactionResult?.final_ph == null) {
+        const pouredPh = item1?.phValue ?? null
+        const existingPh = item2?.phValue ?? null
+        const existingCm3 = Number(item2?.contents ?? item2?.volume ?? 0) || 0
+        const modelled = mixPh([
+          { volume: pouredCm3, ph: pouredPh },
+          { volume: existingCm3, ph: existingPh },
+        ])
+        if (modelled != null) finalPh = modelled
+      }
+
       setDroppedItems((currentItems) => {
         const filteredItems = currentItems.filter(
           (item) => item.id !== item1.id && item.id !== item2.id
@@ -339,6 +354,9 @@ function AnimationBox(props: any) {
             y: (item1.position.y + item2.position.y) / 2,
           },
           image: mergeRule.result.image,
+          // if the authored result image is missing on the server, show the
+          // vessel the mixture is actually in rather than a generic logo
+          fallbackImage: container?.image || other?.image || null,
           volume: totalVolume,
           unit: 'cm³',
           capacity: capacity,
@@ -811,7 +829,7 @@ function AnimationBox(props: any) {
                 const img = e.currentTarget
                 if (img.dataset.fallbackApplied) return
                 img.dataset.fallbackApplied = 'true'
-                img.src = './noun_logo.png'
+                img.src = item.fallbackImage || './noun_logo.png'
               }}
               style={{
                 width: '10em',

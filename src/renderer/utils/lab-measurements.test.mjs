@@ -22,6 +22,7 @@ import {
   formatWithPrecision,
   getInstrumentStep,
   applyReadingError,
+  mixPh,
   evaluatePourTolerance,
 } from './lab-measurements.ts'
 
@@ -412,3 +413,28 @@ test('evaluatePourTolerance rejects pours outside tolerance band', () => {
   assert.equal(tooLow.isAcceptable, false)
 })
 
+
+
+test('diluting a strong acid with water does not become neutral', () => {
+  // The walkthrough case: 36 cm3 of 0.1 M HCl (pH 1.1) into 100 cm3 of water
+  // was displayed as pH 7.0 -- the water's own pH, inherited because the water
+  // happened to be the item dragged. Theory: [H+] = 36*10^-1.1/136 -> pH 1.68.
+  const ph = mixPh([{ volume: 36, ph: 1.1 }, { volume: 100, ph: 7 }])
+  assert.ok(ph > 1.6 && ph < 1.75, `got ${ph}`)
+})
+
+test('mixing handles bases, like-with-like and neutralisation sensibly', () => {
+  const near = (v, lo, hi) => assert.ok(v >= lo && v <= hi, `got ${v}`)
+  near(mixPh([{ volume: 10, ph: 13 }, { volume: 100, ph: 7 }]), 11.9, 12.1)
+  near(mixPh([{ volume: 50, ph: 2 }, { volume: 50, ph: 2 }]), 1.99, 2.01)
+  near(mixPh([{ volume: 50, ph: 1 }, { volume: 50, ph: 13 }]), 6.9, 7.1)
+  near(mixPh([{ volume: 60, ph: 1 }, { volume: 40, ph: 13 }]), 1.6, 1.8)
+  near(mixPh([{ volume: 50, ph: 7 }, { volume: 50, ph: 7 }]), 6.9, 7.1)
+})
+
+test('mixing ignores components with no known pH rather than poisoning the result', () => {
+  assert.equal(mixPh([{ volume: 30, ph: null }, { volume: 50, ph: 2 }]), 2)
+  assert.equal(mixPh([{ volume: 30, ph: 3.2 }]), 3.2)
+  assert.equal(mixPh([{ volume: 30, ph: null }]), null)
+  assert.equal(mixPh([]), null)
+})

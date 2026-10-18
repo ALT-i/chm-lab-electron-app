@@ -162,8 +162,31 @@ function IndexPage(props: any) {
       }
     } catch (e: any) {
       console.error(e)
-      const errorMsg = e?.response?.data?.detail || e?.message || 'Failed to submit to Moodle. Please try again.'
-      alert(errorMsg)
+      // The server's `detail` is written for an administrator ("the site at
+      // https://... redirected the request"). A student needs to know only
+      // that their work is safe and who to tell; the detail stays in the log.
+      const code = e?.response?.data?.code
+      const technical = e?.response?.data?.detail
+      if (technical) console.warn('Moodle submission failed:', technical)
+      if (code === 'moodle_not_configured') {
+        alert(
+          [
+            'Your results could not be sent to Moodle yet.',
+            'Moodle has not been connected to the lab for your institution. Your work and grade are saved here.',
+            'Please let your instructor know.',
+          ].join('\n\n')
+        )
+      } else if (code === 'moodle_unavailable') {
+        alert(
+          [
+            'Your results could not be sent to Moodle right now.',
+            'Moodle is not responding. Your work and grade are saved here — you can try again later.',
+            'If this keeps happening, please let your instructor know.',
+          ].join('\n\n')
+        )
+      } else {
+        alert(technical || e?.message || 'Failed to submit to Moodle. Please try again.')
+      }
     }
   }
 

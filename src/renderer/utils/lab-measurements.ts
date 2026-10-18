@@ -323,3 +323,47 @@ export function evaluatePourTolerance(
     difference,
   }
 }
+
+// ---------------------------------------------------------------------------
+// Mixing without a reaction (dilution, or combining two solutions)
+// ---------------------------------------------------------------------------
+// Diluting 0.1 M HCl with water used to show pH 7.0 because, with no authored
+// `reaction` block on the merge rule, the merged pH was simply whichever item
+// was dragged. Mixing is computable from what is already on the bench, so it
+// should never need a reaction block.
+//
+// Strong-electrolyte model: each solution contributes H+ from its pH and OH-
+// from 14 - pH, weighted by volume. The net excess decides the mixture's pH.
+// This is correct for acid + water, base + water, acid + acid and base + base,
+// and gives a reasonable answer for acid + base. Weak acids/bases and buffers
+// are beyond it; those should carry a `reaction` block for the Tier 2 engine.
+export interface MixComponent {
+  volume: number // cm3
+  ph: number | null | undefined
+}
+
+export function mixPh(components: MixComponent[]): number | null {
+  const usable = components.filter(
+    (c) =>
+      c &&
+      Number.isFinite(c.volume) &&
+      c.volume > 0 &&
+      c.ph != null &&
+      Number.isFinite(c.ph)
+  )
+  if (usable.length === 0) return null
+  if (usable.length === 1) return Number(usable[0].ph)
+
+  const total = usable.reduce((s, c) => s + c.volume, 0)
+  let net = 0 // mol/dm3 of H+ in excess of OH- (negative = basic)
+  for (const c of usable) {
+    const h = Math.pow(10, -Number(c.ph))
+    const oh = Math.pow(10, -(14 - Number(c.ph)))
+    net += (c.volume / total) * (h - oh)
+  }
+
+  // Within water's own autoionisation: effectively neutral.
+  if (Math.abs(net) < 1e-7) return 7
+  const ph = net > 0 ? -Math.log10(net) : 14 + Math.log10(-net)
+  return Math.round(ph * 100) / 100
+}
