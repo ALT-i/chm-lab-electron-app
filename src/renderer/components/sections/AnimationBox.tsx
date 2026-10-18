@@ -213,7 +213,28 @@ function AnimationBox(props: any) {
 
       console.log('Dropped item:', newItem)
 
-      setDroppedItems((currentItems) => [...currentItems, newItem])
+      setDroppedItems((currentItems) => {
+        // Never land on top of something already on the bench: a stacked item
+        // is hidden beneath it, and the next drag would touch both. Step right
+        // (wrapping to a new row) until the spot is clear. Uses the same
+        // overlap boundary as doItemsOverlap.
+        let x = newX
+        let y = newY
+        const taken = (px: number, py: number) =>
+          currentItems.some(
+            (o) =>
+              Math.abs(o.position.x - px) <= ITEM_SIZE &&
+              Math.abs(o.position.y - py) <= ITEM_SIZE
+          )
+        for (let i = 0; i < 16 && taken(x, y); i++) {
+          x += ITEM_SIZE + 12
+          if (x > boxRect.width - ITEM_SIZE) {
+            x = 0
+            y = Math.min(y + ITEM_SIZE + 12, boxRect.height - 100)
+          }
+        }
+        return [...currentItems, { ...newItem, position: { x, y } }]
+      })
       // Use a callback to log the updated state
       // setDroppedItems((currentItems: DroppedItem[]) => {
       //   const updatedItems = [...currentItems, newItem]
@@ -392,7 +413,20 @@ function AnimationBox(props: any) {
   const endDrag = useCallback(() => {
     setDragging(false)
     setCurrentItem(null)
-    droppedItems.forEach((item) => {
+    // One drop is one action. This used to visit every overlapping item, so
+    // dropping water onto the flask while the acid sat underneath merged the
+    // water (correct) AND reported "Invalid Next Step" for the acid. Prefer an
+    // item the current step can combine with; report an invalid step only when
+    // nothing touched is valid.
+    const step = procedureSteps?.steps?.[currentStepIndex]
+    const touching = droppedItems.filter(
+      (i) => i.id !== currentItem.id && doItemsOverlap(currentItem, i)
+    )
+    const target =
+      (step && touching.find((i) => isValidMergeForStep(currentItem, i, step))) ||
+      touching[0]
+    const targets = target ? [target] : []
+    targets.forEach((item) => {
       if (item.id !== currentItem.id) {
         if (doItemsOverlap(currentItem, item)) {
           const currentStep = procedureSteps?.steps?.[currentStepIndex]
