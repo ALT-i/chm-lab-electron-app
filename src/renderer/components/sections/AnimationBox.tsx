@@ -370,6 +370,9 @@ function AnimationBox(props: any) {
           reactionResult: reactionResult,
           // what is in this mixture, whatever the lesson renamed it to
           components: mergeComponents(item1, item2),
+          // the vessel this liquid now sits in, so a later pour knows whether
+          // a measuring instrument delivered it
+          vessel: container?.vessel || container?.name || null,
           // carbonate meeting acid: CO2 is given off on contact
           effervescedAt: effervesces(item1, item2, finalPh) ? Date.now() : null,
         }

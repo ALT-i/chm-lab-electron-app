@@ -390,16 +390,35 @@ export function mixPh(components: MixComponent[]): number | null {
 // burette that delivered it, not by the flask. Ten transfer steps across ten
 // lessons ("transfer 25 cm3 from the pipette into a conical flask") were
 // reading their precision from the flask (+/-5 cm3), so a pipette transfer of
-// 25.00 cm3 recorded anywhere from 20 to 30. A measuring cylinder or beaker
-// that is FILLED from a bottle is still the instrument being read, so the
-// receiving vessel remains the default.
+// 25.00 cm3 recorded anywhere from 20 to 30. A measuring cylinder counts too
+// once it is pouring OUT ("measure 80 cm3 in a cylinder, pour it into the
+// calorimeter"). While a cylinder or beaker is being FILLED from a bottle it is
+// the container, and is still the instrument being read.
+const DELIVERING_PATTERN = /pip+et+e|bur+et+e|measuring\s*cylinder/i
+
+// Which vessel a liquid sits in. Lessons rename mixtures freely ("Hydrochloric
+// Acid", "Pipette with 25cm3 reaction mixture"), so the name alone cannot be
+// trusted; merged items record the vessel they were made in.
+export function vesselOf(item: any): string {
+  return String(item?.vessel || item?.name || '')
+}
+
+export function isDeliveringInstrument(item: any): boolean {
+  if (!item) return false
+  return (
+    DELIVERING_PATTERN.test(vesselOf(item)) ||
+    DELIVERING_PATTERN.test(String(item.name || ''))
+  )
+}
+
 export function resolveMeasuringTool(
   container: any,
   item: any,
   currentItem: any
 ): any {
   const source = container === currentItem ? item : currentItem
-  if (source && (isPipette(source) || isBurette(source))) return source
+  if (source && source !== container && isDeliveringInstrument(source))
+    return source
   if (container?.type === 'TOOL') return container
   if (item?.type === 'TOOL') return item
   return currentItem

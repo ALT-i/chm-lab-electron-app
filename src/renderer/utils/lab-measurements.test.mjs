@@ -24,6 +24,7 @@ import {
   applyReadingError,
   mixPh,
   resolveMeasuringTool,
+  isDeliveringInstrument,
   mergeComponents,
   effervesces,
   evaluatePourTolerance,
@@ -184,9 +185,11 @@ test('volume caption drops a volume already written into the result name', () =>
     formatVolumeCaption(100, '1000cm3 of Hydrochloric Acid', 0.5),
     '100.0 cm³ of Hydrochloric Acid'
   )
+  // the embedded "25cm3" is still stripped; a reading only good to +/-5 now
+  // also says so, so a student can see why it differs from what they typed
   assert.equal(
     formatVolumeCaption(25, '25cm3 Oxalic Acid Solution in Conical Flask', 5),
-    '25 cm³ of Oxalic Acid Solution in Conical Flask'
+    '25 cm³ (±5) of Oxalic Acid Solution in Conical Flask'
   )
   assert.equal(
     formatVolumeCaption(25, 'Pipette with 25cm3 Oxalic Acid', 0.05),
@@ -482,4 +485,20 @@ test('carbonate fizzes on first contact with acid, not again on transfer', () =>
   // no carbonate, or not enough acid to liberate CO2: no fizz
   assert.ok(!effervesces(hcl, { name: 'Sodium Hydroxide', phValue: 13 }, 1.5))
   assert.ok(!effervesces(hcl, na2co3, 9.0))
+})
+
+
+test('a measuring cylinder pouring out is the instrument, found by vessel not name', () => {
+  // Exp 9A: 80 cm3 measured in a cylinder, then poured into the calorimeter.
+  // The lesson names the cylinder's contents just "Distilled Water".
+  const inCylinder = { name: 'Distilled Water', vessel: '100cm3 Measuring Cylinder', precision: 0.5 }
+  const calorimeter = { name: 'Calorimeter', type: 'TOOL', precision: 1 }
+  assert.ok(isDeliveringInstrument(inCylinder))
+  assert.equal(resolveMeasuringTool(calorimeter, calorimeter, inCylinder), inCylinder)
+  // while the cylinder is being FILLED it is the container, and is read as such
+  const cylinder = { name: '100cm3 Measuring Cylinder', type: 'TOOL', precision: 0.5 }
+  const water = { name: 'Distilled Water', type: 'SUBSTANCE' }
+  assert.equal(resolveMeasuringTool(cylinder, cylinder, water), cylinder)
+  // a liquid sitting in a plain beaker is not a delivering instrument
+  assert.ok(!isDeliveringInstrument({ name: 'Acid', vessel: '400cm3 Beaker' }))
 })
